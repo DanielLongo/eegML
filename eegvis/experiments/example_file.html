@@ -1,0 +1,28 @@
+<html>
+  <head>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    </head>
+  <body>
+<a href="#">Just click me.</a>
+<script type="text/javascript">
+  $("a").click(function() {
+  // creating input on-the-fly
+  var input = $(document.createElement("input"));
+  input.attr("type", "file");
+  input.attr("id", "inputid");
+  // add onchange handler if you wish to get the file :)
+  console.log("about to trigger click");
+  input.trigger("click"); // opening dialog
+  console.log("input", input);
+  var file = input[0].files[0];
+  if (file) {
+     console.log("file:", file.name);
+  } else {
+  console.log("couldn't access file directly");
+  }
+
+  return false; // avoiding navigation
+    });
+</script>
+  </body>
+  </html>
