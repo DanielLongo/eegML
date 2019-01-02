@@ -131,7 +131,7 @@ for p in netE.parameters():
 for iteration in xrange(ITERS):
 	start_time = time.time()
 	############################
-	# Update Dencoder network 
+	# Update Decoder network 
 	# No need to update physics based encoder network
 	###########################
 		_data = data.next()
