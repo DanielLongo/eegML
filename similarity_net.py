@@ -1,6 +1,12 @@
 import torch
 from torch import nn
 
+def contrastive_loss(euclidean_distance, label, margin=2.0):
+	# Based on: http://yann.lecun.com/exdb/publis/pdf/hadsell-chopra-lecun-06.pdf
+	loss_contrastive = torch.mean((1-label) * torch.pow(euclidean_distance, 2) +
+		(label) * torch.pow(torch.clamp(margin - euclidean_distance, min=0.0), 2))
+	return loss_contrastive
+
 class SimilarityNet(nn.Module):
 	#input shape (seq_len, batch, input_size)
 	#output shape (seq_len, batch, input_size)
@@ -19,8 +25,8 @@ class SimilarityNet(nn.Module):
 		noisy_data, (hn, cn) = self.rnn2(noisy_data)
 		clean_data, (hn, cn) = self.rnn1(clean_data)
 		clean_data, (hn, cn) = self.rnn2(clean_data)
-		out = torch.sum(noisy_data - clean_data)
-		return out
+		euclidean_distance = torch.nn.functional.pairwise_distance(noisy_data, clean_data)
+		return euclidean_distance
 		
 
-if __name__ == "__main__":
+# if __name__ == "__main__":
