@@ -1,4 +1,5 @@
 import torch
+from torch import nn
 
 class SimilarityNet(nn.Module):
 	#input shape (seq_len, batch, input_size)
@@ -14,10 +15,12 @@ class SimilarityNet(nn.Module):
 		# (seq_len, batch, num_directions * hidden_size)
 		# (num_layers * num_directions, batch, hidden_size)
 	def forward(self, noisy_data, clean_data):
-		noisy_data, _ = self.rnn1(noisy_data)
-		noisy_data, _ = self.rnn2(noisy_data)
-		clean_data, _ = self.rnn1(clean_data)
-		clean_data, _ = self.rnn2(clean_data)
+		noisy_data, (hn, cn) = self.rnn1(noisy_data)
+		noisy_data, (hn, cn) = self.rnn2(noisy_data)
+		clean_data, (hn, cn) = self.rnn1(clean_data)
+		clean_data, (hn, cn) = self.rnn2(clean_data)
 		out = torch.sum(noisy_data - clean_data)
 		return out
 		
+
+if __name__ == "__main__":
