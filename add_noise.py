@@ -25,8 +25,8 @@ netD = RecurrentDiscriminator(32, 64)
 netG = RecurrentGenerator(num_nodes=32, d=50)
 
 optimizerD = optim.Adam(netD.parameters(), lr=1e-4, betas=(0.5, 0.9))
-optimizerG = optim.Adam(netG.parameters( lr=1e-4, betas=(0.5, 0.9))
-),
+optimizerG = optim.Adam(netG.parameters(), lr=1e-4, betas=(0.5, 0.9))
+
 def calc_gradient_penalty(netD, real_data, fake_data):
 	# print(real_data.size())
 	alpha = torch.rand(BATCH_SIZE, 1, 1)

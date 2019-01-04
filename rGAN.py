@@ -10,8 +10,8 @@ class RecurrentGenerator(nn.Module):
 		self.num_layers= num_layers
 		self.num_nodes = num_nodes
 		self.d = d
-		self.rnn1 = nn.LSTM(input_size=self.num_nodes, hidden_size=self.d, num_layers=self.num_layers, bidirectional=self.bidirectional)
-		self.rnn2 = nn.LSTM(input_size=self.d * (1 + (bidirectional*1)), hidden_size=self.num_nodes, num_layers=1, bidirectional=False)
+		self.rnn1 = nn.LSTM(input_size=self.num_nodes, hidden_size=self.d, num_layers=self.num_layers, bidirectional=self.bidirectional, batch_first=True)
+		self.rnn2 = nn.LSTM(input_size=self.d * (1 + (bidirectional*1)), hidden_size=self.num_nodes, num_layers=1, bidirectional=False, batch_first=True)
 		# (seq_len, batch, num_directions * hidden_size)
 		# (num_layers * num_directions, batch, hidden_size)
 	def forward(self, x):
@@ -28,8 +28,8 @@ class RecurrentDiscriminator(nn.Module):
 		self.num_layers= num_layers
 		self.num_nodes = num_nodes
 		self.d = d
-		self.rnn1 = nn.LSTM(input_size=self.num_nodes, hidden_size=self.d, num_layers=self.num_layers, bidirectional=self.bidirectional)
-		self.rnn2 = nn.LSTM(input_size=self.d * (1 + (bidirectional*1)), hidden_size=self.num_nodes, num_layers=1, bidirectional=False)
+		self.rnn1 = nn.LSTM(input_size=self.num_nodes, hidden_size=self.d, num_layers=self.num_layers, bidirectional=self.bidirectional, batch_first=True)
+		self.rnn2 = nn.LSTM(input_size=self.d * (1 + (bidirectional*1)), hidden_size=self.num_nodes, num_layers=1, bidirectional=False, batch_first=True)
 		self.fc1 = nn.Sequential(
 			nn.Linear(self.num_nodes * 1, self.num_nodes//2),
 			nn.ReLU()
