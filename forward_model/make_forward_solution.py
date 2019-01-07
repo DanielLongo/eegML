@@ -21,8 +21,8 @@ fwd = mne.make_forward_solution(raw.info, trans, src, bem)
 
 
 #bert
-to make bem file model = mne.make_bem_model('bert', subjects_dir="./bert") 
-write_bem_surfaces('sample-5120-5120-5120-bem.fif', model) from http://martinos.org/mne/stable/manual/cookbook.html#flow-diagram
+# to make bem file model = mne.make_bem_model('bert', subjects_dir="./bert") 
+# write_bem_surfaces('sample-5120-5120-5120-bem.fif', model) from http://martinos.org/mne/stable/manual/cookbook.html#flow-diagram
 # raw is from guassine distribtuion shape X
 # trans = None WHAT SHOULD THIS BE SET TO?
 # src = mne.setup_source_space("bert", subjects_dir="../bert")
