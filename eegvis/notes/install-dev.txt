@@ -1,0 +1,10 @@
+set PATH=%PATH%;c:\mnt\PortableApps\GitPortable\App\Git\bin
+(now availabe as setgitvars.bat)
+
+conda install -c bokeh nodejs
+conda install -c javascript gulp npm
+
+
+
+# advanced, add datashader (need to install from bokeh to get latest version)
+conda install -c bokeh datashader 

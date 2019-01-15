@@ -1,0 +1,29 @@
+
+Old	                               New
+@listenTo(obj, 'change', fn)	       @connect(obj.change, fn)
+@listenTo(obj, 'change:attr', fn)      @connect(obj.properties.attr.change, fn)
+obj.trigger('change', arg)	       obj.change.emit(arg)
+obj.trigger('change:attr', arg)	       obj.properties.attr.change.emit(arg)
+
+
+New deprecations¶
+The Plot.webgl property has been deprecated in place of a new property Plot.output_backend in order to avoid conflicts between WebGL and a new SVG backend. If you are using plot.webgl = True, you should switch to setting::
+
+  plot.output_backend = "webgl" for the future.
+
+
+notes on setting ranges for a plot
+----------------------------------
+from bokeh.models import Range1d
+
+fig = make_fig()
+left, right, bottom, top = 3, 9, 4, 10
+fig.x_range=Range1d(left, right)
+fig.y_range=Range1d(bottom, top)
+show(fig)
+
+# to update dynamically, then, for example for y_range
+# don't try to re-assign
+
+fig.y_range.start = newbottom
+fig.y_range.end = newtop

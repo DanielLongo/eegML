@@ -1,0 +1,5 @@
+# currently scikits.sample rate is required for good downsampling
+# the one on pypi is not going to work with python3
+# probably should make this point to a particular commit
+# it requires libsamplerate to be installed (on linux)
+-e git+https://github.com/cournape/samplerate/#egg=samplerate

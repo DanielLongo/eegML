@@ -1,0 +1,7 @@
+# anaconda 4+
+xarray
+ipywidgets >= 7.0
+#bokeh<=0.12.9,>=0.12.6
+bokeh=0.12.16
+matplotlib
+h5py

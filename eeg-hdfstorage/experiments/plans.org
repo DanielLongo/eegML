@@ -1,0 +1,20 @@
+* eeg-hdfstorage experiments
+** downsampling
+*** resampy vs scikit.samplerate vs scipy.*poly
+So far I am using scikit.samplerate but I need to use the github version
+resampy may be fine if we convert to float32 first
+
+This might make sense to go into eegml-signal but maybe not
+**** experiments to try [0/2]
+- [ ] do head-to-head comparison
+- [ ] try convert vs no conver to float32 for resampy
+
+** clipping
+** interfacing with signals processing
+** convenience function
+** provenance/history tracking
+** multi-record files
+** annotation sets
+** [ ] converters [0/0]
+*** [X] tuh edf to eeg.h5
+At least the basics of this conversion is done and applied t the the TUH seizure corpus

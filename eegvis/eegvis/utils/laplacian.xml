@@ -1,0 +1,38 @@
+<Template Name="Laplacian" ClsId="{7B1FC068-2A13-11D3-809D-006008184043}">
+  <Defn ClassName="Montage">
+    <Channel Name="F7-aF7" Definition="F7-aF7" MasterControl="1" PenColor="0" OverlapPrevious="0"/>
+    <Channel Name="T3-aT3" Definition="T3-aT3" MasterControl="1" PenColor="0" OverlapPrevious="0"/>
+    <Channel Name="T5-aT5" Definition="T5-aT5" MasterControl="1" PenColor="0" OverlapPrevious="0"/>
+    <Channel Name="O1-aO1" Definition="O1-aO1" MasterControl="1" PenColor="0" OverlapPrevious="0"/>
+    <Channel Name="F3-aF3" Definition="F3-aF3" MasterControl="1" PenColor="0" OverlapPrevious="0"/>
+    <Channel Name="C3-aC3" Definition="C3-aC3" MasterControl="1" PenColor="0" OverlapPrevious="0"/>
+    <Channel Name="P3-aP3" Definition="P3-aP3" MasterControl="1" PenColor="0" OverlapPrevious="0"/>
+    <Channel Name="CZ-aCz" Definition="CZ-aCz" MasterControl="1" PenColor="0" OverlapPrevious="0"/>
+    <Channel Name="F4-aF4" Definition="F4-aF4" MasterControl="1" PenColor="0" OverlapPrevious="0"/>
+    <Channel Name="C4-aC4" Definition="C4-aC4" MasterControl="1" PenColor="0" OverlapPrevious="0"/>
+    <Channel Name="P4-aP4" Definition="P4-aP4" MasterControl="1" PenColor="0" OverlapPrevious="0"/>
+    <Channel Name="F8-aF8" Definition="F8-aF8" MasterControl="1" PenColor="0" OverlapPrevious="0"/>
+    <Channel Name="T4-aT4" Definition="T4-aT4" MasterControl="1" PenColor="0" OverlapPrevious="0"/>
+    <Channel Name="T6-aT6" Definition="T6-aT6" MasterControl="1" PenColor="0" OverlapPrevious="0"/>
+    <Channel Name="O2-aO2" Definition="O2-aO2" MasterControl="1" PenColor="0" OverlapPrevious="0"/>
+    <AvgRef Name="aF7" Definition="FP1+F3+C3+T3"/>
+    <AvgRef Name="aT3" Definition="F7+C3+T5"/>
+    <AvgRef Name="aT5" Definition="T3+C3+P3+O1"/>
+    <AvgRef Name="aF3" Definition="F7+C3+FZ+FP1"/>
+    <AvgRef Name="aC3" Definition="T3+F3+CZ+P3"/>
+    <AvgRef Name="aP3" Definition="C3+PZ+O1+T5"/>
+    <AvgRef Name="aFpz" Definition="FP1+FZ+FP2"/>
+    <AvgRef Name="aCz" Definition="FZ+C4+PZ+C3"/>
+    <AvgRef Name="aOz" Definition="O1+PZ+O2"/>
+    <AvgRef Name="aF4" Definition="FP2+F8+C4+FZ"/>
+    <AvgRef Name="aC4" Definition="F4+T4+P4+CZ"/>
+    <AvgRef Name="aP4" Definition="C4+T6+O2+PZ"/>
+    <AvgRef Name="aF8" Definition="FP2+F4+T4"/>
+    <AvgRef Name="aT4" Definition="F8+C4+T6"/>
+    <AvgRef Name="aT6" Definition="T4+P4+O2"/>
+    <AvgRef Name="Av17" Definition="F7+F3+FZ+F4+F8+T3+C3+CZ+C4+T4+T5+P3+PZ+P4+T6+O1+O2"/>
+    <AvgRef Name="Av12" Definition="F3+F4+T3+C3+C4+T4+T5+P3+P4+T6+O1+O2"/>
+    <AvgRef Name="aO1" Definition="PZ+P3+T5"/>
+    <AvgRef Name="aO2" Definition="T6+P4+PZ"/>
+  </Defn>
+</Template>

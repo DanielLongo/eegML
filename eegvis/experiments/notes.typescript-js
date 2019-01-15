@@ -1,0 +1,158 @@
+
+(function(root, factory) {
+    //  if(typeof exports === 'object' && typeof module === 'object')
+    //    factory(require("Bokeh"));
+    //  else if(typeof define === 'function' && define.amd)
+    //    define(["Bokeh"], factory);
+    //  else if(typeof exports === 'object')
+    //    factory(require("Bokeh"));
+    //  else
+    factory(root["Bokeh"]);
+})(this, function(Bokeh) {
+    var define;
+    return (function outer(modules, entry) {
+        if (Bokeh != null) {
+            return Bokeh.register_plugin(modules, {}, entry);
+        } else {
+            throw new Error("Cannot find Bokeh. You have to load it prior to loading plugins.");
+        }
+    })
+    ({
+        "custom/main": function(require, module, exports) {
+            var models = {
+                "KeyboardResponder": require("custom/bk_script_7285d79409d149f6bfe4f809b78b13e7.keyboard_responder").KeyboardResponder
+            };
+            require("base").register_models(models);
+            module.exports = models;
+        },
+        "custom/bk_script_7285d79409d149f6bfe4f809b78b13e7.keyboard_responder": function(require, module, exports) {
+            "use strict";
+            var __extends = (this && this.__extends) || (function () {
+		var extendStatics = Object.setPrototypeOf ||
+                    ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+                    function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+		return function (d, b) {
+                    extendStatics(d, b);
+                    function __() { this.constructor = d; }
+                    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+		};
+            })();
+            Object.defineProperty(exports, "__esModule", { value: true });
+            var dom_1 = require("core/dom");
+            var p = require("core/properties");
+            var layout_dom_1 = require("models/layouts/layout_dom");
+            //import {jQuery} from "jquery.min.js"
+            // import * as $ from "jquery";
+            var url = "https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js";
+            // load jQuery by hand
+            var script = document.createElement('script');
+            script.src = url;
+            script.async = false;
+            script.onreadystatechange = script.onload = function () { jQuery.noConflict(); };
+            document.querySelector("head").appendChild(script);
+            var gLastKeyCode = undefined;
+            // create custom Bokeh model based upon example
+            var KeyboardResponderView = /** @class */ (function (_super) {
+		__extends(KeyboardResponderView, _super);
+		function KeyboardResponderView() {
+                    return _super !== null && _super.apply(this, arguments) || this;
+		}
+		KeyboardResponderView.prototype.initialize = function (options) {
+                    _super.prototype.initialize.call(this, options);
+                    console.log("setting up jQuery");
+                    console.log(jQuery);
+                    this.model.keyCode = 0;
+                    jQuery('body').keydown(// same as .on('keydown', handler);
+			function (ev) {
+			    console.log("got key", ev.keyCode);
+			    // this.model.keyCode = ev.keyCode
+			    gLastKeyCode = ev.keyCode;
+			    // this.render()
+			    // how to set lastKeyCode = ev.keyCode
+			    // jQuery('#output').text(JSON.stringify(ev.keyCode));
+			    // jQuery('#which').text(ev.which);
+			});
+                    this.render();
+                    // Set listener so that when the a change happens
+                    // event, we can process the new data
+                    // this.connect(this.model.slider.change, () => this.render())
+		};
+		KeyboardResponderView.prototype.render = function () {
+                    // Bokehjs Views (like Backbone) create <div> elements by default, accessible as
+                    // this.el
+                    // Many Bokeh views ignore this default <div>, and instead do things
+                    // like draw to the HTML canvas. In this case though, we change the
+                    // contents of the <div>, based on the current value.
+                    console.log('trying render', this.el);
+                    dom_1.empty(this.el);
+                    // this.el.appendChild(document.createTextNode(gLastKeyCode))
+		};
+		return KeyboardResponderView;
+            }(layout_dom_1.LayoutDOMView));
+            exports.KeyboardResponderView = KeyboardResponderView;
+            var KeyboardResponder = /** @class */ (function (_super) {
+		__extends(KeyboardResponder, _super);
+		function KeyboardResponder() {
+                    var _this = _super !== null && _super.apply(this, arguments) || this;
+                    // If there is an associated view, this is boilerplate.
+                    _this.default_view = KeyboardResponderView;
+                    // The ``type`` class attribute should generally match exactly the name
+                    // of the corresponding Python class.
+                    _this.type = "KeyboardResponder";
+                    return _this;
+		}
+		return KeyboardResponder;
+            }(layout_dom_1.LayoutDOM));
+            exports.KeyboardResponder = KeyboardResponder;
+            // The @define block adds corresponding "properties" to the JS model. These
+            // should basically line up 1-1 with the Python model class. Most property
+            // types have counterparts, e.g. bokeh.core.properties.String will be
+            // p.String in the JS implementation. Where the JS type system is not yet
+            // as rich, you can use p.Any as a "wildcard" property type.
+            KeyboardResponder.define({
+		// text:   [ p.String ],
+		// slider: [ p.Any    ],
+		keycode: [p.Int],
+            });
+            
+        }
+    }, "custom/main");
+    ;
+});
+(function() {
+    var fn = function() {
+        Bokeh.safely(function() {
+            (function(root) {
+                function embed_document(root) {
+                    
+                    var docs_json = document.getElementById('c1a841f7-167e-4030-a912-502c37deec17').textContent;
+                    var render_items = [{"elementid":"56b21ac9-b635-4c6b-9ae7-21445339922b","sessionid":"iKFrAbXJ87QBSTYtwgCqZHqFmQaoPodlrNhmY4AdPq03","use_for_title":true}];
+                    root.Bokeh.embed.embed_items(docs_json, render_items);
+                    
+                }
+                if (root.Bokeh !== undefined) {
+                    embed_document(root);
+                } else {
+                    var attempts = 0;
+                    var timer = setInterval(function(root) {
+			if (root.Bokeh !== undefined) {
+                            embed_document(root);
+                            clearInterval(timer);
+			}
+			attempts++;
+			if (attempts > 100) {
+                            console.log("Bokeh: ERROR: Unable to run BokehJS code because BokehJS library is missing")
+                            clearInterval(timer);
+			}
+                    }, 10, root)
+                }
+            })(window);
+        });
+    };
+    if (document.readyState != "loading") fn();
+    else document.addEventListener("DOMContentLoaded", fn);
+})();
+
+
+Partial<T> is used to specify a type which much include the attributes of class T (or namespace?)
+see https://netbasal.com/getting-to-know-the-partial-type-in-typescript-ecfcfbc87cb6

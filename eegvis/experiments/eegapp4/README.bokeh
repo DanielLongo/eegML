@@ -1,0 +1,94 @@
+When executing your main.py Bokeh server ensures that the standard __file__ module attribute works as you would expect. So it is possible to include data files or custom user defined models in your directory however you like. Additionally, the application directory is also added to sys.path so that python modules in the application directory may be easily imported.
+
+myapp
+   |
+   +---data
+   |    +---things.csv
+   |
+   +---helpers.py
+   +---main.py
+   |---models
+   |    +---custom.js
+   |
+   +---server_lifecycle.py
+   +---static
+   |    +---css
+   |    |    +---special.css
+   |    |
+   |    +---images
+   |    |    +---foo.png
+   |    |    +---bar.png
+   |    |
+   |    +---js
+   |        +---special.js
+   |
+   |---templates
+   |    +---index.html
+   |
+   +---theme.yaml
+
+
+===
+in the ion slider example, a CustomJS callback seems to be linked to a custom widget...maybe
+- how are these setup normally?
+
+===
+it seems that signals are based upon backbone (and its events): notes
+
+models - manages data and triggers "change" events when any of its data is modified
+       - handles sync
+
+views - is an atomic chunk of user interface - listens for changes and renders UI
+      - handles user input and interactivity
+      - sends captured input to the model
+
+* backbone is pre-configured to sync with a restful api
+* Events is a module in backbone, can be used anywhere, can trigger custom named events
+  _.extend(object, Backbone.Events)
+
+  object.on("alert", function(msg) {
+     alert("Triggered " + msg);
+     });
+
+
+
+--- bokeh has its own custom events in python
+
+# bokeh events: useful page https://bokeh.pydata.org/en/latest/_modules/bokeh/events.html#ButtonClick
+
+# core properties (setup for serialization from python -> javascript (and back)
+  https://bokeh.pydata.org/en/latest/docs/reference/core/properties.html#bokeh-core-properties
+
+
+example of writing callback
+
+---------------------------
+cb_cselect = bokeh.models.CustomJS(args=dict(cir=cir,csource=csource), code ="""
+    var selected_color = cb_obj.value;
+    cir.glyph.line_color.field = selected_color;
+    cir.glyph.fill_color.field = selected_color;
+    cir.glyph.change.emit()
+""")
+
+
+
+---
+extending bokeh
+===============
+https://bokeh.pydata.org/en/latest/docs/user_guide/extensions.html
+
+
+---
+in debugger of chrome
+
+doc = Bokeh.documents[0]
+msg = { kind: "ModelChanged", model: document.keyboardsingleton.ref(), attr: 'keycode', 'new': -5}
+
+doc.event_manager.send_event(msg)
+
+# running bokeh serve --log-level trace eegapp4
+get this when hit key
+2018-07-07 16:06:52,552 Not sending notification back to client <bokeh.server.connection.ServerConnection object at 0x7f741494e128> for a change it requested
+2018-07-07 16:06:52,556 Patching attribute 'key_num_presses' of KeyboardResponder(id='1044', ...) with 1
+keycallback:  key_num_presses 0 1 keycode: 74
+2018-07-07 16:06:52,556 Not sending notification back to client <bokeh.server.connection.ServerConnection object at 0x7f741494e128> for a change it requested
