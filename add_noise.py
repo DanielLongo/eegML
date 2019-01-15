@@ -13,10 +13,10 @@ BATCH_SIZE = 4
 LAMBDA = 10 # Gradient penalty lambda hyperparameter
 NUM_NODES= 44
 
-# noisy_eegs = torch.randn(16, BATCH_SIZE, 100, NUM_NODES) #None, batch_size, time, num_nodes
-noisy_eegs = EEGDataset("/mnt/data1/eegdbs/SEC-0.1/stanford/", num_examples=10, num_channels=NUM_NODES, batch_size=BATCH_SIZE)
-# clean_eegs = torch.randn(16, BATCH_SIZE, 100, NUM_NODES)
-clean_eegs = EEGDataset("/mnt/data1/eegdbs/SEC-0.1/stanford/", num_examples=10, num_channels=NUM_NODES, batch_size=BATCH_SIZE)
+noisy_eegs = torch.randn(16, BATCH_SIZE, 100, NUM_NODES) #None, batch_size, time, num_nodes
+# noisy_eegs = EEGDataset("./the_server/Users/DanielLongo/server/mnt/data1/eegdbs/SEC-0.1/stanford/", num_examples=10, num_channels=NUM_NODES, batch_size=BATCH_SIZE)
+clean_eegs = torch.randn(16, BATCH_SIZE, 100, NUM_NODES)
+# clean_eegs = EEGDataset("./the_server/Users/DanielLongo/server/mnt/data1/eegdbs/SEC-0.1/stanford/", num_examples=10, num_channels=NUM_NODES, batch_size=BATCH_SIZE)
 
 
 one = torch.FloatTensor([1])
