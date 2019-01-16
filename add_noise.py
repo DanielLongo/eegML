@@ -6,7 +6,7 @@ import torch.nn.functional as F
 import torch.optim as optim
 from load_EEGs import EEGDataset
 
-use_cuda = False
+use_cuda = True
 ITERS = 10
 CRITIC_ITERS = 3
 BATCH_SIZE = 4
@@ -14,9 +14,21 @@ LAMBDA = 10 # Gradient penalty lambda hyperparameter
 NUM_NODES= 44
 
 noisy_eegs = torch.randn(16, BATCH_SIZE, 100, NUM_NODES) #None, batch_size, time, num_nodes
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
 # noisy_eegs = EEGDataset("./the_server/Users/DanielLongo/server/mnt/data1/eegdbs/SEC-0.1/stanford/", num_examples=10, num_channels=NUM_NODES, batch_size=BATCH_SIZE)
 clean_eegs = torch.randn(16, BATCH_SIZE, 100, NUM_NODES)
 # clean_eegs = EEGDataset("./the_server/Users/DanielLongo/server/mnt/data1/eegdbs/SEC-0.1/stanford/", num_examples=10, num_channels=NUM_NODES, batch_size=BATCH_SIZE)
+=======
+# noisy_eegs = EEGDataset("/mnt/data1/eegdbs/SEC-0.1/stanford/", num_examples=10, num_channels=NUM_NODES, batch_size=BATCH_SIZE)
+clean_eegs = torch.randn(16, BATCH_SIZE, 100, NUM_NODES)
+# clean_eegs = EEGDataset("/mnt/data1/eegdbs/SEC-0.1/stanford/", num_examples=10, num_channels=NUM_NODES, batch_size=BATCH_SIZE)
+>>>>>>> Stashed changes
+=======
+# noisy_eegs = EEGDataset("/mnt/data1/eegdbs/SEC-0.1/stanford/", num_examples=10, num_channels=NUM_NODES, batch_size=BATCH_SIZE)
+clean_eegs = torch.randn(16, BATCH_SIZE, 100, NUM_NODES)
+# clean_eegs = EEGDataset("/mnt/data1/eegdbs/SEC-0.1/stanford/", num_examples=10, num_channels=NUM_NODES, batch_size=BATCH_SIZE)
+>>>>>>> Stashed changes
 
 
 one = torch.FloatTensor([1])
@@ -79,7 +91,7 @@ def main():
 			D_real = netD(real_data_v)
 			D_real = D_real.mean()
 			# print D_real
-			# D_real.backward(mone)
+			#D_real.backward(mone)
 			D_real.backward()
 
 			# train with fake
