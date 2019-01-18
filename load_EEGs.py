@@ -24,23 +24,23 @@ class Dataset(data.Dataset):
 class EEGDataset(data.Dataset):
 	def __init__(self, data_dir, num_channels=19, num_examples=-1, batch_size=64):
 		self.examples_signal, self.examples_atribute = load_eeg_directory(data_dir, num_channels, min_length=100, max_length=999999, max_num=num_examples)
-		print("before", np.shape(self.examples_signal))
+		# print("before", np.shape(self.examples_signal))
 		self.batched_examples_atribute = split_into_batches(self.examples_atribute, batch_size)
 		self.batched_examples_signal = split_into_batches(self.examples_signal, batch_size)
-		print("after", np.shape(self.batched_examples_signal))
+		# print("after", np.shape(self.batched_examples_signal))
 
 	def __len__(self):
 		return len(self.batched_examples_atribute)
 
 	def __getitem__(self, index):
 		# Select sample
-		print(np.shape(self.batched_examples_signal))
-		print("to be sent", np.asarray(self.batched_examples_signal[index]).shape)
+		# print(np.shape(self.batched_examples_signal))
+		# print("to be sent", np.asarray(self.batched_examples_signal[index]).shape)
 		batch = self.batched_examples_signal[index]
 		sample = torch.from_numpy(np.asarray(batch))
 		sample = sample.view(-1, sample.shape[2], sample.shape[1]).type('torch.FloatTensor')
 		# sample = torch.from_numpy((self.batched_examples_signal[index]))#, self.examples_atribute[index]
-		print(sample.shape)
+		# print(sample.shape)
 		return sample
 
 >>>>>>> 3ebe3bddf86ebb19c53395ddfff66b9644a1b327
@@ -161,7 +161,7 @@ if __name__ == "__main__":
 >>>>>>> 3ebe3bddf86ebb19c53395ddfff66b9644a1b327
 # filename = "./eeg-hdfstorage/data/absence_epilepsy.eeghdf"
 # # signals, atributes = load_eeg_file(filename)
-# # print("atributes", atributes.shape)
+# print("atributes", atributes.shape)
 # signals, atributes = load_eeg_directory("./eeg-hdfstorage/data/", 19)
 # print(np.shape(signals))
 # print(np.shape(atributes))
