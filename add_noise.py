@@ -5,18 +5,19 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 from load_EEGs import EEGDataset
+from utils import save_EEG
 
 use_cuda = True
-ITERS = 10
+ITERS = 30
 CRITIC_ITERS = 3
-BATCH_SIZE = 64
+BATCH_SIZE = 32
 LAMBDA = 10 # Gradient penalty lambda hyperparameter
 NUM_NODES= 44
 
-# noisy_eegs = torch.randn(16, BATCH_SIZE, 100, NUM_NODES) #None, batch_size, time, num_nodes
+noisy_eegs = torch.randn(16, BATCH_SIZE, 10000, NUM_NODES) #None, batch_size, time, num_nodes
 # clean_eegs = torch.randn(16, BATCH_SIZE, 100, NUM_NODES)
-clean_eegs = EEGDataset("/mnt/data1/eegdbs/SEC-0.1/stanford/", num_examples=512, num_channels=NUM_NODES, batch_size=BATCH_SIZE)
-noisy_eegs = EEGDataset("/mnt/data1/eegdbs/SEC-0.1/stanford/", num_examples=512, num_channels=NUM_NODES, batch_size=BATCH_SIZE)
+clean_eegs = EEGDataset("/mnt/data1/eegdbs/SEC-0.1/stanford/", num_examples=1024, num_channels=NUM_NODES, batch_size=BATCH_SIZE)
+# noisy_eegs = EEGDataset("/mnt/data1/eegdbs/SEC-0.1/stanford/", num_examples=512, num_channels=NUM_NODES, batch_size=BATCH_SIZE)
 
 
 # one = torch.FloatTensor([1]).cuda()
@@ -142,5 +143,8 @@ def main():
 
 		print("G_cost" , G_cost)
 		print("D_cost", D_cost)
+
+		if (iteration % 1 == 0):
+			save_EEG(fake.cpu().detach().numpy(), NUM_NODES, 200, "./generated_eegs/generated-"+ str(iteration) + "-0")
 if __name__ == "__main__":
 	main()
