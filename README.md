@@ -1,4 +1,4 @@
-### EEG ML ###
+## EEG ML ##
 #### Goals: ####
 * Synthesize EEGs with a recurrent wGAN
 * Create a siamese network capable of generated a manifold of EEGs
@@ -12,7 +12,7 @@
 - [ ] Use Siamese Network to Generate a manifold
 - [ ] Test out add noise network
   
-
+#### Project Plan: ####
 
 <img src="https://github.com/DanielLongo/eegML/blob/master/ProjectPlan/pg1.png"/>
 <img src="https://github.com/DanielLongo/eegML/blob/master/ProjectPlan/pg2.png"/>
