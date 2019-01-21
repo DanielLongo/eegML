@@ -4,13 +4,13 @@
 * Create a siamese network capable of generated a manifold of EEGs
 * Remove Artifacts from EEGs
 
-TODOS:
-[*] Create forward model enabled generator
-[*] Enable larger continuous EEG generation (Add S<sub>t</sub> as input)
-[ ] Get the entire architecture to compile 
-[ ] Train Siamese Network
-[ ] Use Siamese Network to Generate a manifold
-[ ] Test out add noise network
+#### TODOS: ####
+- [ ] Create forward model enabled generator
+- [ ] Enable larger continuous EEG generation (Add S<sub>t</sub> as input)
+- [ ] Get the entire architecture to compile 
+- [ ] Train Siamese Network
+- [ ] Use Siamese Network to Generate a manifold
+- [ ] Test out add noise network
   
 
 
