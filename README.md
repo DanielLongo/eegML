@@ -1,4 +1,4 @@
-## EEG ML ##
+## Electroencephalography Machine Learning ##
 #### Goals: ####
 * Synthesize EEGs with a recurrent wGAN
 * Create a siamese network capable of generated a manifold of EEGs
