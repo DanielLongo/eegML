@@ -5,8 +5,8 @@
 * Remove Artifacts from EEGs
 
 TODOS:
-[ ] Create forward model enabled generator
-[ ] Enable larger continuous EEG generation (Add S<sub>t<sub> as input)
+[*] Create forward model enabled generator
+[*] Enable larger continuous EEG generation (Add S<sub>t</sub> as input)
 [ ] Get the entire architecture to compile 
 [ ] Train Siamese Network
 [ ] Use Siamese Network to Generate a manifold
