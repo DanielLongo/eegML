@@ -1,4 +1,4 @@
-import h5py
+import mne
 import time
 import datetime
 import numpy as np
@@ -62,30 +62,39 @@ def parse_atributes(atributes):
 	# born_premature = atributes["born_premature"]
 
 
-def load_eeg_directory(path, num_channels, min_length=0, max_length=1e9999, max_num=-1, sample_frequency=200, length=10000):
+def load_eeg_directory(path, num_channels, min_length=0, max_length=1e9999, max_num=-1, sample_frequency=200, length=1000):
 	files = os.listdir(path)
 	num_files_read = 0
 	examples_signal = []
 	examples_atribute = []
 	for file in files:
-		if file.split(".")[-1] != "eeghdf":
+		if (file.split(".")[-1] != "eeghdf") and (file.split(".")[-1] != "fif"):
 			continue
-		signals, atributes, specs = load_eeg_file(path + file)
-		# print(signals.shape[1])
-		signals = signals[:, :length]
-		if signals.shape[1] != length:
-			continue
-		if (int(specs["number_channels"]) != num_channels):
-			# print("Not correct num_channels", num_channels, specs["number_channels"])
-			continue
-		if (int(specs["sample_frequency"]) != sample_frequency):
-			# print("Not correct sample_frequency", sample_frequency, specs["sample_frequency"])
-			continue
-		num_readings = signals.shape[1]
-		# if num_readings < min_length:
-		# 	continue
-		# elif num_readings > max_length:
-		# 	continue 
+
+		if file.split(".")[-1] == "eeghdf":
+			signals, atributes, specs = load_eeg_file(path + file)
+			# print(signals.shape[1])
+			if signals.shape[1] < length + 5000:
+				continue
+			# start = signals.shape[1] / 2 
+			# stop =
+			signals = signals[:, 5000:length+5000]
+			if (int(specs["number_channels"]) != num_channels):
+				# print("Not correct num_channels", num_channels, specs["number_channels"])
+				continue
+			if (int(specs["sample_frequency"]) != sample_frequency):
+				# print("Not correct sample_frequency", sample_frequency, specs["sample_frequency"])
+				continue
+			num_readings = signals.shape[1]
+			# if num_readings < min_length:
+			# 	continue
+			# elif num_readings > max_length:
+			# 	continue 
+		
+		else: #it's .fif
+			signals = mne.io.read_raw_fif(path + file).to_data_frame().values
+			atributes= [None]
+
 		examples_signal += [signals]
 		examples_atribute += [atributes]
 		
@@ -106,7 +115,8 @@ def split_into_batches(x, examples_per_batch):
 
 # dataset = Dataset("./eeg-hdfstorage/data/")
 if __name__ == "__main__":
-	dataset = EEGDataset("/mnt/data1/eegdbs/SEC-0.1/stanford/", num_examples=10, num_channels=44)
+	# dataset = EEGDataset("/mnt/data1/eegdbs/SEC-0.1/stanford/", num_examples=10, num_channels=44)
+	dataset = EEGDataset("/Users/DanielLongo/server/mnt/home2/dlongo/eegML/generated_eegs/from_forward_model/", num_examples=10, num_channels=44)
 # filename = "./eeg-hdfstorage/data/absence_epilepsy.eeghdf"
 # # signals, atributes = load_eeg_file(filename)
 # print("atributes", atributes.shape)
