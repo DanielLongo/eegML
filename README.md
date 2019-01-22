@@ -5,7 +5,7 @@
 * Remove Artifacts from EEGs
 
 #### TODOS: ####
-- [ ] Create forward model enabled generator - Jan 22
+- [x] Create forward model enabled generator - Jan 22
 - [ ] Enable larger continuous EEG generation (Add S<sub>t</sub> as input) - Jan 22
 - [ ] Get the entire architecture to compile - Jan 22
 - [ ] Train Siamese Network - Jan 23
