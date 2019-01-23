@@ -1,6 +1,7 @@
 import random
 import torch
 from rGAN import RecurrentGenerator, RecurrentDiscriminator
+from forward_model_enabled_G import ForwardModelEnabledG
 import torch.autograd as autograd
 import torch.nn as nn
 import torch.nn.functional as F
@@ -16,9 +17,13 @@ LAMBDA = 10 # Gradient penalty lambda hyperparameter
 NUM_NODES= 44
 LENGTH = 1000
 
-clean_eegs = torch.randn(34, BATCH_SIZE, LENGTH, NUM_NODES) #None, batch_size, time, num_nodes
+print("Started")
+# clean_eegs = torch.randn(8, BATCH_SIZE, LENGTH, NUM_NODES) #None, batch_size, time, num_nodes
+# clean_eegs = torch.randn(8, BATCH_SIZE, LENGTH, 7498)
+print("clean loaded")
 # clean_eegs = torch.randn(16, BATCH_SIZE, 100, NUM_NODES)
-noisy_eegs = EEGDataset("/mnt/data1/eegdbs/SEC-0.1/stanford/", num_examples=1024, num_channels=NUM_NODES, batch_size=BATCH_SIZE)#, length=LENGTH)
+noisy_eegs = EEGDataset("/mnt/data1/eegdbs/SEC-0.1/stanford/", num_examples=256, num_channels=NUM_NODES, batch_size=BATCH_SIZE)#, length=LENGTH)
+print("noisy loaded")
 # noisy_eegs = EEGDataset("/mnt/data1/eegdbs/SEC-0.1/stanford/", num_examples=512, num_channels=NUM_NODES, batch_size=BATCH_SIZE)
 
 
@@ -31,7 +36,8 @@ mone = one * -1
 	# mone = mone.cuda()
 
 netD = RecurrentDiscriminator(NUM_NODES, 64)
-netG = RecurrentGenerator(num_nodes=NUM_NODES, d=50)
+# netG = RecurrentGenerator(num_nodes=NUM_NODES, d=50)
+netG = ForwardModelEnabledG(44, 50)
 
 netD.cuda()
 netG.cuda()
@@ -66,7 +72,8 @@ def main():
 	for iteration in range(ITERS):
 		# for i in range(noisy_eegs.shape[0]):
 		for i in range(len(noisy_eegs)):
-			if (noisy_eegs[i].shape[0] != BATCH_SIZE) or (clean_eegs[i].shape[0] != BATCH_SIZE):
+			# if (noisy_eegs[i].shape[0] != BATCH_SIZE) or (clean_eegs[i].shape[0] != BATCH_SIZE):
+			if (noisy_eegs[i].shape[0] != BATCH_SIZE):
 				continue
 			############################
 			# (1) Update D network
@@ -93,7 +100,10 @@ def main():
 				# D_real.backward()
 
 				# train with fake
-				fake_data = clean_eegs[i]
+				# fake_data = clean_eegs[i]
+				# fake_data = torch.randn(BATCH_SIZE, LENGTH, NUM_NODES)
+				fake_data = torch.randn(BATCH_SIZE, LENGTH, 7498)
+
 				if use_cuda:
 					fake_data = fake_data.cuda()
 
@@ -125,7 +135,9 @@ def main():
 			# 	p.requires_grad = True
 			netG.zero_grad()
 
-			fake_data = clean_eegs[i]
+			# fake_data = clean_eegs[i]
+			# fake_data = torch.randn(BATCH_SIZE, LENGTH, NUM_NODES)
+			fake_data = torch.randn(BATCH_SIZE, LENGTH, 7498)
 			if use_cuda:
 				fake_data = fake_data.cuda()
 			fake_datav = autograd.Variable(fake_data)
