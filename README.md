@@ -8,7 +8,7 @@
 - [x] Create forward model enabled generator 
 - [x] Create conditional generator (concat)
 - [ ] Create conditional generator (projection)
-- [ ] Enable larger continuous EEG generation (Add S<sub>t</sub> as input) - Jan 22
+- [ ] Enable larger continuous EEG generation (Add S<sub>t</sub> as input)
 - [ ] Get the entire architecture to compile 
 - [ ] Train Siamese Network 
 - [ ] Use Siamese Network to Generate a manifold 
