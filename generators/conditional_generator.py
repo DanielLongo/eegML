@@ -6,6 +6,7 @@ class ConditionalGenerator(nn.Module):
 	#output shape (seq_len, batch, input_size)
 	def __init__(self, num_nodes, d, y_input_size, num_layers=3, bidirectional=True):
 		super(ConditionalGenerator, self).__init__()
+		self.y_input_size = y_input_size
 		self.bidirectional = bidirectional
 		self.num_layers= num_layers
 		self.num_nodes = num_nodes

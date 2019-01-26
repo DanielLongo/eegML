@@ -10,28 +10,33 @@ import torch.optim as optim
 sys.path.append("./generators/")
 from rGAN import RecurrentGenerator, RecurrentDiscriminator
 from forward_model_enabled_G import ForwardModelEnabledG
+from conditional_generator import ConditionalGenerator
+from c_forward_model import cGForwardModel
 from load_EEGs import EEGDataset
 from utils import save_EEG
 
 USE_CUDA = True
 ITERS = 30
 CRITIC_ITERS = 3 #3
-BATCH_SIZE = 32
+BATCH_SIZE = 16
 LAMBDA = 10 # Gradient penalty lambda hyperparameter
 NUM_NODES= 44
 LENGTH = 1000
 
-real_eegs = EEGDataset("/mnt/data1/eegdbs/SEC-0.1/stanford/", num_examples=256, num_channels=NUM_NODES, batch_size=BATCH_SIZE)
+real_eegs = EEGDataset("/mnt/data1/eegdbs/SEC-0.1/stanford/", num_examples=256*4, num_channels=NUM_NODES, batch_size=BATCH_SIZE)
 
 
 one = torch.ones([])
 mone = one * -1
 
-netD = RecurrentDiscriminator(NUM_NODES, 64)
+## Pick Of Discriminators 
+netD = RecurrentDiscriminator(num_nodes=NUM_NODES, d=64)
 
 ## Pick Of Generators
-netG = RecurrentGenerator(num_nodes=NUM_NODES, d=50)
+# netG = RecurrentGenerator(num_nodes=NUM_NODES, d=50)
 # netG = ForwardModelEnabledG(44, 50)
+# netG = ConditionalGenerator(num_nodes=44, d=64, y_input_size=20)
+netG = cGForwardModel(num_nodes=44, d=64, y_input_size=20)
 
 optimizerD = optim.Adam(netD.parameters(), lr=1e-4, betas=(0.5, 0.9))
 optimizerG = optim.Adam(netG.parameters(), lr=1e-4, betas=(0.5, 0.9))
@@ -73,6 +78,9 @@ def main():
 			###########################
 			for p in netD.parameters():  # reset requires_grad
 				p.requires_grad = True  # they are set to False below in netG update:
+
+			# for p in netG.parameters():
+			# 	p.requires_grad = False # to avoid computation
 
 			for iter_d in range(CRITIC_ITERS):
 				real = real_eegs[random.randint(0,len(real_eegs)-2)]
@@ -122,8 +130,8 @@ def main():
 			for p in netD.parameters():
 				p.requires_grad = False  # to avoid computation
 
-			for p in netG.parameters():
-				p.requires_grad = True
+			# for p in netG.parameters():
+			# 	p.requires_grad = True
 
 			netG.zero_grad()
 
@@ -143,7 +151,7 @@ def main():
 
 			G = netD(fake)
 			G = G.mean()
-			print("G mean", G)
+			G.requires_grad = True
 			G.backward(mone)
 			G_cost = -G
 			optimizerG.step()
@@ -153,7 +161,7 @@ def main():
 		print("D_cost", D_cost)
 
 		if (iteration % 1 == 0):
-			save_EEG(fake.cpu().detach().numpy(), NUM_NODES, 200, "./generated_eegs/generated-"+ str(iteration) + "-0")
-			save_EEG(real_data.cpu().detach().numpy(), NUM_NODES, 200, "./generated_eegs/generated-"+ str(iteration) + "-1")
+			save_EEG(fake.cpu().detach().numpy(), NUM_NODES, 200, "./generated_eegs/generated-"+ str(iteration) + "-fake-rGF")
+			save_EEG(real.cpu().detach().numpy(), NUM_NODES, 200, "./generated_eegs/generated-"+ str(iteration) + "-real-rGF")
 if __name__ == "__main__":
 	main()

@@ -18,7 +18,7 @@ class ForwardModelEnabledG(nn.Module):
 
 		data_path = sample.data_path()
 		self.raw_fname = data_path + '/MEG/sample/sample_audvis_raw.fif'
-		fwd = mne.read_forward_solution("../forward_model/sample_forward_model")
+		fwd = mne.read_forward_solution("./forward_model/sample_forward_model")
 		self.fwd_fixed = mne.convert_forward_solution(fwd, surf_ori=True, force_fixed=True, use_cps=True)
 		leadfield = self.fwd_fixed['sol']['data']
 		n_dipoles = leadfield.shape[1]
@@ -74,8 +74,11 @@ class ForwardModelEnabledG(nn.Module):
 		out = self.apply_foward_model(out)
 		return out
 
-	def generate_noise(self, batch_size, num_signals, num_dipoles=7498):
+	# def generate_noise(self, batch_size, num_signals, num_dipoles=7498):
+	# 	return [torch.randn(batch_size, num_signals, num_dipoles)]
+	def generate_noise(self, batch_size, num_signals, num_nodes, num_dipoles=7498):
 		return [torch.randn(batch_size, num_signals, num_dipoles)]
+
 
 if __name__ == "__main__":
 	z = torch.randn((16, 100, 7498))#.cuda()
