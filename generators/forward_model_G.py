@@ -20,7 +20,6 @@ class ForwardModelEnabledG(nn.Module):
 		self.raw_fname = data_path + '/MEG/sample/sample_audvis_raw.fif'
 		fwd = mne.read_forward_solution("../forward_model/sample_forward_model")
 		self.fwd_fixed = mne.convert_forward_solution(fwd, surf_ori=True, force_fixed=True, use_cps=True)
-		# info = mne.create_info(self.channel_names, self.fs_gen, "eeg")
 		leadfield = self.fwd_fixed['sol']['data']
 		n_dipoles = leadfield.shape[1]
 		self.vertices = [src_hemi['vertno'] for src_hemi in self.fwd_fixed['src']]
@@ -30,15 +29,7 @@ class ForwardModelEnabledG(nn.Module):
 		#(n_times, n_dipoles) -> (n_times, n_dipoles)
 		self.rnnBS1 = nn.LSTM(input_size=n_dipoles, hidden_size=d, num_layers=num_layers, bidirectional=bidirectional, batch_first=True) 
 		self.rnnBS2 = nn.LSTM(input_size=d * (1 + (bidirectional*1)), hidden_size=n_dipoles, num_layers=1, bidirectional=False, batch_first=True)
-
-
-		## For Sensor Space Modifications ##
-		# (seq_len, num nodes) - > (seq_len, num nodes)
-		self.num_nodes = num_nodes
-		self.rnnSS1 = nn.LSTM(input_size=self.num_nodes, hidden_size=d, num_layers=num_layers, bidirectional=bidirectional, batch_first=True)
-		self.rnnSS2 = nn.LSTM(input_size=d * (1 + (bidirectional*1)), hidden_size=self.num_nodes, num_layers=1, bidirectional=False, batch_first=True)
-		# (seq_len, batch, num_directions * hidden_size)
-		# (num_layers * num_directions, batch, hidden_size)
+		self.ReLU = nn.ReLU()
 
 
 	def apply_foward_model(self, x):
@@ -68,36 +59,23 @@ class ForwardModelEnabledG(nn.Module):
 	def apply_brain_space_mods(self, x):
 		# print("brain space mods", x.shape)
 		out, _ = self.rnnBS1(x)
+		# out = ReLU(out)
 		# print("rrnBS1", out.shape)
 		out, _ = self.rnnBS2(out)
 		# print("rrnBS2", out.shape)
 		# out = out.transpose(1,2)
 		return out
 
-	def apply_sensor_space_mods(self, x):
-		out, _ = self.rnnSS1(x)
-		out, _ = self.rnnSS2(out)
-		return out
-
-
-	# def forward(self, z):
-	# 	z *= 1e-9
-	# 	out = self.apply_brain_space_mods(z)
-	# 	out = self.apply_foward_model(out)
-	# 	out = self.apply_sensor_space_mods(out)
-	# 	return out
 
 	def forward(self, z):
 		z *= 1e-9
-		# out = self.apply_brain_space_mods(z)
-		# print("out1", out.shape)
+		out = self.apply_brain_space_mods(z)
 		out = z.transpose(1,2)
-		print("out2", out.shape)
 		out = self.apply_foward_model(out)
-		print("out3", out.shape)
-		out = self.apply_sensor_space_mods(out)
-		print("out4", out.shape)
 		return out
+
+	def generate_noise(self, batch_size, num_signals, num_dipoles=7498):
+		return [torch.randn(batch_size, num_signals, num_dipoles)]
 
 if __name__ == "__main__":
 	z = torch.randn((16, 100, 7498))#.cuda()

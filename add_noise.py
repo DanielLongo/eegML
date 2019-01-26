@@ -1,5 +1,6 @@
 import random
 import torch
+import sys
 from rGAN import RecurrentGenerator, RecurrentDiscriminator
 from forward_model_enabled_G import ForwardModelEnabledG
 import torch.autograd as autograd
@@ -9,6 +10,7 @@ import torch.optim as optim
 from load_EEGs import EEGDataset
 from utils import save_EEG
 
+sys.path.append("./generators/")
 use_cuda = True
 ITERS = 30
 CRITIC_ITERS = 3 #3
