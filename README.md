@@ -1,8 +1,8 @@
 ## Electroencephalography Machine Learning ##
 #### Goals: ####
-* Synthesize EEGs with a recurrent wGAN
-* Create a siamese network capable of generated a manifold of EEGs
-* Remove Artifacts from EEGs
+* Improve data augmentation: synthesize EEGs with a forward model enabled recurrent wGAN
+* Improve understanding and diagnostics: Create a siamese network capable of generated a manifold of EEGs
+* Imporved singal processing: Remove Artifacts from EEGs
 
 #### TODOS: ####
 - [x] Create forward model enabled generator 
