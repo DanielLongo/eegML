@@ -1,6 +1,6 @@
 ## Electroencephalography Machine Learning ##
 #### Goals: ####
-* Improve data augmentation: synthesize EEGs with a forward model enabled recurrent wGAN
+* Improve data augmentation: synthesize EEGs with a forward model enabled recurrent conditional wGAN
 * Improve understanding and diagnostics: Create a siamese network capable of generated a manifold of EEGs
 * Imporved singal processing: Remove Artifacts from EEGs
 
