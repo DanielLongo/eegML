@@ -8,10 +8,11 @@ import torch.nn.functional as F
 import torch.optim as optim
 
 sys.path.append("./generators/")
-from rGAN import RecurrentGenerator, RecurrentDiscriminator
+from rGAN import RecurrentDiscriminator
 from forward_model_enabled_G import ForwardModelEnabledG
 from conditional_generator import ConditionalGenerator
 from c_forward_model import cGForwardModel
+from rG import RecurrentGenerator
 from load_EEGs import EEGDataset
 from utils import save_EEG
 
