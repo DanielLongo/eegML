@@ -8,7 +8,7 @@ import torch.nn.functional as F
 import torch.optim as optim
 
 sys.path.append("./generators/")
-from rGAN import RecurrentDiscriminator
+from rDiscrimator import RecurrentDiscriminator
 from forward_model_enabled_G import ForwardModelEnabledG
 from conditional_generator import ConditionalGenerator
 from c_forward_model import cGForwardModel
