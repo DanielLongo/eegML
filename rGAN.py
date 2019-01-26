@@ -19,6 +19,9 @@ class RecurrentGenerator(nn.Module):
 		out, _ = self.rnn2(out)
 		return out
 
+	def generate_noise(self, batch_size, num_signals, num_nodes):
+		return [torch.randn(batch_size, num_signals, num_nodes)]
+
 class RecurrentDiscriminator(nn.Module):
 	#input shape (seq_len, batch, input_size)
 	#ourput shape (batch, 1)

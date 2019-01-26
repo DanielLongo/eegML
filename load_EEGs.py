@@ -9,7 +9,7 @@ import h5py
 
 class EEGDataset(data.Dataset):
 	def __init__(self, data_dir, num_channels=19, num_examples=-1, batch_size=64, length=1000):
-		self.examples_signal, self.examples_atribute = load_eeg_directory(data_dir, num_channels, min_length=100, max_length=999999, max_num=num_examples, legth=length)
+		self.examples_signal, self.examples_atribute = load_eeg_directory(data_dir, num_channels, min_length=100, max_length=999999, max_num=num_examples, length=length)
 		# print("before", np.shape(self.examples_signal))
 		self.batched_examples_atribute = split_into_batches(self.examples_atribute, batch_size)
 		self.batched_examples_signal = split_into_batches(self.examples_signal, batch_size)
