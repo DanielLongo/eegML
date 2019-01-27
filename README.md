@@ -9,6 +9,7 @@
 - [x] Create conditional generator (concat)
 - [ ] Create conditional generator (projection)
 - [x] Enable larger continuous EEG generation (Add S<sub>t</sub> as input)
+- [ ] Enable various size of real data size
 - [ ] Get the entire architecture to compile 
 - [ ] Train Siamese Network 
 - [ ] Use Siamese Network to Generate a manifold 
