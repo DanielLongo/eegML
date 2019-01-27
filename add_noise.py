@@ -8,7 +8,7 @@ import torch.nn.functional as F
 import torch.optim as optim
 
 sys.path.append("./generators/")
-from rDiscrimator import RecurrentDiscriminator
+from rDiscriminator import RecurrentDiscriminator
 from forward_model_enabled_G import ForwardModelEnabledG
 from conditional_generator import ConditionalGenerator
 from c_forward_model import cGForwardModel
@@ -34,10 +34,10 @@ mone = one * -1
 netD = RecurrentDiscriminator(num_nodes=NUM_NODES, d=64)
 
 ## Pick Of Generators
-# netG = RecurrentGenerator(num_nodes=NUM_NODES, d=50)
+netG = RecurrentGenerator(num_nodes=NUM_NODES, d=50)
 # netG = ForwardModelEnabledG(44, 50)
 # netG = ConditionalGenerator(num_nodes=44, d=64, y_input_size=20)
-netG = cGForwardModel(num_nodes=44, d=64, y_input_size=20)
+# netG = cGForwardModel(num_nodes=44, d=64, y_input_size=20)
 
 optimizerD = optim.Adam(netD.parameters(), lr=1e-4, betas=(0.5, 0.9))
 optimizerG = optim.Adam(netG.parameters(), lr=1e-4, betas=(0.5, 0.9))
@@ -71,6 +71,7 @@ def calc_gradient_penalty(netD, real_data, fake_data):
 
 def main():
 	for iteration in range(ITERS):
+		real_eegs.shuffle()
 		for i in range(len(real_eegs)):
 			if (real_eegs[i].shape[0] != BATCH_SIZE):
 				continue
@@ -162,7 +163,7 @@ def main():
 		print("D_cost", D_cost)
 
 		if (iteration % 1 == 0):
-			save_EEG(fake.cpu().detach().numpy(), NUM_NODES, 200, "./generated_eegs/generated-"+ str(iteration) + "-fake-rGF")
-			save_EEG(real.cpu().detach().numpy(), NUM_NODES, 200, "./generated_eegs/generated-"+ str(iteration) + "-real-rGF")
+			save_EEG(fake.cpu().detach().numpy(), NUM_NODES, 200, "./generated_eegs/generated-"+ str(iteration) + "-fake-rG-shuffle")
+			# save_EEG(real.cpu().detach().numpy(), NUM_NODES, 200, "./generated_eegs/generated-"+ str(iteration) + "-real-rGF-shuffle")
 if __name__ == "__main__":
 	main()

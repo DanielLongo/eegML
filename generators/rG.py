@@ -27,7 +27,7 @@ class RecurrentGenerator(nn.Module):
 		else:
 			out, (h_n, c_n) = self.rnn1(x)
 			out, _ = self.rnn2(out)
-		return out, (h_n, c_n)
+		return out#, (h_n, c_n)
 
 	def generate_noise(self, batch_size, num_signals, num_nodes):
 		return [torch.randn(batch_size, num_signals, num_nodes)]

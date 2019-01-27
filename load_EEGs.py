@@ -6,9 +6,11 @@ import os
 import torch
 from torch.utils import data
 import h5py
+import random
 
 class EEGDataset(data.Dataset):
 	def __init__(self, data_dir, num_channels=19, num_examples=-1, batch_size=64, length=1000):
+		self.batch_size = batch_size
 		self.examples_signal, self.examples_atribute = load_eeg_directory(data_dir, num_channels, min_length=100, max_length=999999, max_num=num_examples, length=length)
 		# print("before", np.shape(self.examples_signal))
 		self.batched_examples_atribute = split_into_batches(self.examples_atribute, batch_size)
@@ -28,6 +30,13 @@ class EEGDataset(data.Dataset):
 		# sample = torch.from_numpy((self.batched_examples_signal[index]))#, self.examples_atribute[index]
 		# print(sample.shape)
 		return sample
+
+	def shuffle(self):
+		examples = list(zip(self.examples_signal, self.examples_atribute))
+		random.shuffle(examples)
+		self.examples_signal, self.examples_atribute = zip(*examples)
+		self.batched_examples_signal = split_into_batches(self.examples_signal, self.batch_size)
+		self.batched_examples_atribute = split_into_batches(self.examples_atribute, self.batch_size)
 
 
 def load_eeg_file(filename):
@@ -109,14 +118,15 @@ def split_into_batches(x, examples_per_batch):
 	for start in range(0, len(x), examples_per_batch):
 		end = start + examples_per_batch
 		final += [x[start:end]]
-	print("final", np.shape(final))
+	# print("final", np.shape(final))
 	return final
 
 
 # dataset = Dataset("./eeg-hdfstorage/data/")
 if __name__ == "__main__":
-	# dataset = EEGDataset("/mnt/data1/eegdbs/SEC-0.1/stanford/", num_examples=10, num_channels=44)
-	dataset = EEGDataset("/Users/DanielLongo/server/mnt/home2/dlongo/eegML/generated_eegs/from_forward_model/", num_examples=10, num_channels=44)
+	dataset = EEGDataset("/mnt/data1/eegdbs/SEC-0.1/stanford/", num_examples=10, num_channels=44)
+	dataset.shuffle()
+	# dataset = EEGDataset("/Users/DanielLongo/server/mnt/home2/dlongo/eegML/generated_eegs/from_forward_model/", num_examples=10, num_channels=44)
 # filename = "./eeg-hdfstorage/data/absence_epilepsy.eeghdf"
 # # signals, atributes = load_eeg_file(filename)
 # print("atributes", atributes.shape)
