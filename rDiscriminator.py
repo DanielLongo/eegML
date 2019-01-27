@@ -21,14 +21,37 @@ class RecurrentDiscriminator(nn.Module):
 			nn.Sigmoid()
 		)
 
-	def forward(self, x):
-		output, (hn, cn) = self.rnn1(x)
-		out = output
-		output, (hn, cn) = self.rnn2(out) 
-		out = cn #TODO WHICH ONE
+
+	# def forward(self, x):
+	# 	output, (hn, cn) = self.rnn1(x)
+	# 	out = output
+	# 	output, (hn, cn) = self.rnn2(out) 
+	# 	out = cn #TODO WHICH ONE
+	# 	out = out.view(-1, self.num_nodes * 1)
+	# 	out = self.fc1(out)
+	# 	out = self.fc2(out)
+	# 	return out
+
+	def forward(self, x, *args):
+		if len(args) != 0:
+			assert(len(args) == 2), "Invalid args need len 2: h_0 and c_0"
+			out, _ = self.rnn1(x, (args[0], args[1])) #h_0, c_0
+		else:
+			out, _ = self.rnn1(x)
+
+		out, (h_n, c_n) = self.rnn2(out)
+		out = h_n #TODO WHICH ONE
 		out = out.view(-1, self.num_nodes * 1)
 		out = self.fc1(out)
 		out = self.fc2(out)
 		return out
 
-
+if __name__ == "__main__":
+	d = RecurrentDiscriminator(44, 50)
+	x = torch.zeros(64, 100, 44)
+	h_0 = torch.zeros(6, 64, 50)
+	c_0 = torch.zeros(6, 64, 50)
+	pred = d(x, h_0, c_0)
+	print(pred.shape)
+	pred = d(x)
+	print(pred.shape)

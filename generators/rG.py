@@ -19,7 +19,7 @@ class RecurrentGenerator(nn.Module):
 		# out, _ = self.rnn2(out)
 		# return out
 
-	def forward(self, x, *args):
+	def forward(self, x, *args, continuous=False):
 		if len(args) != 0:
 			assert(len(args) == 2), "Invalid args need len 2: h_0 and c_0"
 			out, (h_n, c_n) = self.rnn1(x, (args[0], args[1])) #h_0, c_0
@@ -27,7 +27,9 @@ class RecurrentGenerator(nn.Module):
 		else:
 			out, (h_n, c_n) = self.rnn1(x)
 			out, _ = self.rnn2(out)
-		return out#, (h_n, c_n)
+		if continuous:
+			return out, (h_n, c_n)
+		return out
 
 	def generate_noise(self, batch_size, num_signals, num_nodes):
 		return [torch.randn(batch_size, num_signals, num_nodes)]
@@ -36,7 +38,7 @@ if __name__ == "__main__":
 	g = RecurrentGenerator(44, 50)
 	noise = g.generate_noise(4, 100, 44)[0]
 	h_0, c_0 = torch.zeros((6, 4, 50)), torch.zeros((6, 4, 50))
-	out, (h_n, c_n) = g(noise, h_0, c_0)
+	out, (h_n, c_n) = g(noise, h_0, c_0, continuous=True)
 	print("out", out.shape)
 	print("h_n", h_n.shape)
 	print("c_n", c_n.shape)

@@ -19,7 +19,7 @@ from utils import save_EEG
 USE_CUDA = True
 ITERS = 30
 CRITIC_ITERS = 3 #3
-BATCH_SIZE = 16
+BATCH_SIZE = 32
 LAMBDA = 10 # Gradient penalty lambda hyperparameter
 NUM_NODES= 44
 LENGTH = 1000
