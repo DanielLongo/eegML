@@ -78,11 +78,13 @@ def calc_gradient_penalty(netD, real_data, fake_data):
 	return gradient_penalty
 
 def main():
+	iters = 0
 	for iteration in range(ITERS):
 		real_eegs.shuffle()
 		for i in range(len(real_eegs)):
 			if (real_eegs[i].shape[0] != BATCH_SIZE):
 				continue
+			iters += 1
 			############################
 			# (1) Update D network
 			###########################
@@ -167,13 +169,19 @@ def main():
 			G.backward(mone)
 			G_cost = -G
 			optimizerG.step()
+			
+			if (iters % 1000 == 0):
+				save_EEG(fake.cpu().detach().numpy(), NUM_NODES, 200, "./generated_eegs/generated-iter"+ str(iters) + "-fake-rG-long")
+				print("Epoch", iteration)
+				print("G_cost" , G_cost)
+				print("D_cost", D_cost)
 
 		print("Epoch", iteration)
 		print("G_cost" , G_cost)
 		print("D_cost", D_cost)
 
 		if (iteration % 1 == 0):
-			save_EEG(fake.cpu().detach().numpy(), NUM_NODES, 200, "./generated_eegs/generated-"+ str(iteration) + "-fake-rG-long")
+			save_EEG(fake.cpu().detach().numpy(), NUM_NODES, 200, "./generated_eegs/generated-epoch"+ str(iteration) + "-fake-rG-long")
 			# save_EEG(real.cpu().detach().numpy(), NUM_NODES, 200, "./generated_eegs/generated-"+ str(iteration) + "-real-rGF-shuffle")
 if __name__ == "__main__":
 	main()
