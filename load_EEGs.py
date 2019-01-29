@@ -11,14 +11,17 @@ import random
 class EEGDataset(data.Dataset):
 	def __init__(self, data_dir, num_channels=19, num_examples=-1, batch_size=64, length=1000):
 		self.batch_size = batch_size
+		self.length = length
 		# self.examples_signal, self.examples_atribute = load_eeg_directory(data_dir, num_channels, min_length=100, max_length=999999, max_num=num_examples, length=length)
-		self.filenames = get_filenames(data_dir, num_channels, min_length=100, max_length=999999, max_num=num_examples, length=length)
+		self.filenames = get_filenames(data_dir, num_channels, length, min_length=100, max_length=999999, max_num=num_examples)
 		self.batched_filenames = split_into_batches(self.filenames, batch_size)
+		print("Number of files found:", len(self.filenames), "Length:", length)
 		# self.batched_examples_atribute = split_into_batches(self.examples_atribute, batch_size)
 		# self.batched_examples_signal = split_into_batches(self.examples_signal, batch_size)
 
 	def __len__(self):
-		return len(self.batched_examples_atribute)
+		# return len(self.batched_examples_atribute)
+		return len(self.batched_filenames)
 
 	def __getitem__(self, index):
 		#old bad method
@@ -28,7 +31,7 @@ class EEGDataset(data.Dataset):
 
 		#new version (doesn't kill vRAM)
 		batch_filenames = self.batched_filenames[index]
-		signals, attributes = read_filenames(batch_filenames)
+		signals, attributes = read_filenames(batch_filenames, self.length)
 		sample = torch.from_numpy(np.asarray(signals))
 		sample = sample.view(-1, sample.shape[2], sample.shape[1]).type('torch.FloatTensor')
 
@@ -130,15 +133,17 @@ def split_into_batches(x, examples_per_batch):
 	return final
 
 def read_filenames(filenames, length):
+	examples_signal = []
+	examples_atribute = []
 	for file in filenames:
-			signals, atributes, specs = load_eeg_file(path + file)
-			signals = signals[:, :length]
+		signals, atributes, specs = load_eeg_file(file)
+		signals = signals[:, :length]
 		examples_signal += [signals]
 		examples_atribute += [atributes]
 		
-	return examples_signal, examples_atribute	
+	return examples_signal, examples_atribute
 
-def get_filenames(path, num_channels, min_length=0, max_length=1e9999, max_num=-1, sample_frequency=200, length=1000):
+def get_filenames(path, num_channels, length, min_length=0, max_length=1e9999, max_num=-1, sample_frequency=200):
 	files = os.listdir(path)
 	num_files_read = 0
 	filenames = []
@@ -147,7 +152,7 @@ def get_filenames(path, num_channels, min_length=0, max_length=1e9999, max_num=-
 			continue
 
 		if file.split(".")[-1] == "eeghdf":
-			signals, _, _ = load_eeg_file(path + file)
+			signals, _, specs = load_eeg_file(path + file)
 			if signals.shape[1] < length:
 				continue
 			if (int(specs["number_channels"]) != num_channels):
@@ -160,7 +165,7 @@ def get_filenames(path, num_channels, min_length=0, max_length=1e9999, max_num=-
 
 		filenames += [path + file]
 		
-		if num_files_read-1 == max_num:
+		if num_files_read == max_num:
 			return filenames
 		num_files_read += 1
 
@@ -168,9 +173,9 @@ def get_filenames(path, num_channels, min_length=0, max_length=1e9999, max_num=-
 
 # dataset = Dataset("./eeg-hdfstorage/data/")
 if __name__ == "__main__":
-	print("TYUIO")
-	dataset = EEGDataset("/mnt/data1/eegdbs/SEC-0.1/stanford/", num_examples=10, num_channels=44)
+	dataset = EEGDataset("/mnt/data1/eegdbs/SEC-0.1/stanford/", num_examples=-1, num_channels=44, length=100000)
 	dataset.shuffle()
+	dataset[0]
 	# dataset = EEGDataset("/Users/DanielLongo/server/mnt/home2/dlongo/eegML/generated_eegs/from_forward_model/", num_examples=10, num_channels=44)
 # filename = "./eeg-hdfstorage/data/absence_epilepsy.eeghdf"
 # # signals, atributes = load_eeg_file(filename)

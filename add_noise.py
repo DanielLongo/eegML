@@ -17,14 +17,16 @@ from load_EEGs import EEGDataset
 from utils import save_EEG
 
 USE_CUDA = True
+PARALLEL = True
 ITERS = 30
-CRITIC_ITERS = 3 #3
+CRITIC_ITERS = 2 #3
 BATCH_SIZE = 32
 LAMBDA = 10 # Gradient penalty lambda hyperparameter
-NUM_NODES= 44
-LENGTH = 1000
+NUM_NODES = 44
+# LENGTH = 1000
+LENGTH = 10000
 
-real_eegs = EEGDataset("/mnt/data1/eegdbs/SEC-0.1/stanford/", num_examples=256*4, num_channels=NUM_NODES, batch_size=BATCH_SIZE)
+real_eegs = EEGDataset("/mnt/data1/eegdbs/SEC-0.1/stanford/", num_examples=10000, num_channels=NUM_NODES, batch_size=BATCH_SIZE, length=10000)#000)
 
 
 one = torch.ones([])
@@ -34,10 +36,16 @@ mone = one * -1
 netD = RecurrentDiscriminator(num_nodes=NUM_NODES, d=64)
 
 ## Pick Of Generators
-netG = RecurrentGenerator(num_nodes=NUM_NODES, d=50)
+netG = RecurrentGenerator(num_nodes=NUM_NODES, d=50) 
+# netGG = netG
+noise_gen_G = netG.generate_noise
 # netG = ForwardModelEnabledG(44, 50)
 # netG = ConditionalGenerator(num_nodes=44, d=64, y_input_size=20)
 # netG = cGForwardModel(num_nodes=44, d=64, y_input_size=20)
+
+if PARALLEL:
+	netD = nn.DataParallel(netD)
+	netG = nn.DataParallel(netG)
 
 optimizerD = optim.Adam(netD.parameters(), lr=1e-4, betas=(0.5, 0.9))
 optimizerG = optim.Adam(netG.parameters(), lr=1e-4, betas=(0.5, 0.9))
@@ -99,7 +107,8 @@ def main():
 				D_real.backward(mone)
 
 				# train with fake
-				noise = netG.generate_noise(BATCH_SIZE, LENGTH, NUM_NODES)
+				# noise = netG.generate_noise(BATCH_SIZE, LENGTH, NUM_NODES)
+				noise = noise_gen_G(BATCH_SIZE, LENGTH, NUM_NODES)
 
 				if USE_CUDA:
 					noise = [x.cuda() for x in noise]
@@ -137,7 +146,8 @@ def main():
 
 			netG.zero_grad()
 
-			noise = netG.generate_noise(BATCH_SIZE, LENGTH, NUM_NODES)
+			# noise = netG.generate_noise(BATCH_SIZE, LENGTH, NUM_NODES)
+			noise = noise_gen_G(BATCH_SIZE, LENGTH, NUM_NODES)	
 
 			if USE_CUDA:
 				noise = [x.cuda() for x in noise]
@@ -163,7 +173,7 @@ def main():
 		print("D_cost", D_cost)
 
 		if (iteration % 1 == 0):
-			save_EEG(fake.cpu().detach().numpy(), NUM_NODES, 200, "./generated_eegs/generated-"+ str(iteration) + "-fake-rG-shuffle")
+			save_EEG(fake.cpu().detach().numpy(), NUM_NODES, 200, "./generated_eegs/generated-"+ str(iteration) + "-fake-rG-long")
 			# save_EEG(real.cpu().detach().numpy(), NUM_NODES, 200, "./generated_eegs/generated-"+ str(iteration) + "-real-rGF-shuffle")
 if __name__ == "__main__":
 	main()
