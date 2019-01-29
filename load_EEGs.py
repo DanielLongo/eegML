@@ -11,32 +11,40 @@ import random
 class EEGDataset(data.Dataset):
 	def __init__(self, data_dir, num_channels=19, num_examples=-1, batch_size=64, length=1000):
 		self.batch_size = batch_size
-		self.examples_signal, self.examples_atribute = load_eeg_directory(data_dir, num_channels, min_length=100, max_length=999999, max_num=num_examples, length=length)
-		# print("before", np.shape(self.examples_signal))
-		self.batched_examples_atribute = split_into_batches(self.examples_atribute, batch_size)
-		self.batched_examples_signal = split_into_batches(self.examples_signal, batch_size)
-		# print("after", np.shape(self.batched_examples_signal))
+		# self.examples_signal, self.examples_atribute = load_eeg_directory(data_dir, num_channels, min_length=100, max_length=999999, max_num=num_examples, length=length)
+		self.filenames = get_filenames(data_dir, num_channels, min_length=100, max_length=999999, max_num=num_examples, length=length)
+		self.batched_filenames = split_into_batches(self.filenames, batch_size)
+		# self.batched_examples_atribute = split_into_batches(self.examples_atribute, batch_size)
+		# self.batched_examples_signal = split_into_batches(self.examples_signal, batch_size)
 
 	def __len__(self):
 		return len(self.batched_examples_atribute)
 
 	def __getitem__(self, index):
-		# Select sample
-		# print(np.shape(self.batched_examples_signal))
-		# print("to be sent", np.asarray(self.batched_examples_signal[index]).shape)
-		batch = self.batched_examples_signal[index]
-		sample = torch.from_numpy(np.asarray(batch))
+		#old bad method
+		# batch = self.batched_examples_signal[index]
+		# sample = torch.from_numpy(np.asarray(batch))
+		# sample = sample.view(-1, sample.shape[2], sample.shape[1]).type('torch.FloatTensor')
+
+		#new version (doesn't kill vRAM)
+		batch_filenames = self.batched_filenames[index]
+		signals, attributes = read_filenames(batch_filenames)
+		sample = torch.from_numpy(np.asarray(signals))
 		sample = sample.view(-1, sample.shape[2], sample.shape[1]).type('torch.FloatTensor')
-		# sample = torch.from_numpy((self.batched_examples_signal[index]))#, self.examples_atribute[index]
-		# print(sample.shape)
+
 		return sample
 
 	def shuffle(self):
-		examples = list(zip(self.examples_signal, self.examples_atribute))
-		random.shuffle(examples)
-		self.examples_signal, self.examples_atribute = zip(*examples)
-		self.batched_examples_signal = split_into_batches(self.examples_signal, self.batch_size)
-		self.batched_examples_atribute = split_into_batches(self.examples_atribute, self.batch_size)
+		#old bad method
+		# examples = list(zip(self.examples_signal, self.examples_atribute))
+		# random.shuffle(examples)
+		# self.examples_signal, self.examples_atribute = zip(*examples)
+		# self.batched_examples_signal = split_into_batches(self.examples_signal, self.batch_size)
+		# self.batched_examples_atribute = split_into_batches(self.examples_atribute, self.batch_size)
+
+		#new better method
+		random.shuffle(self.filenames)
+		self.batched_filenames = split_into_batches(self.filenames, self.batch_size)
 
 
 def load_eeg_file(filename):
@@ -121,9 +129,46 @@ def split_into_batches(x, examples_per_batch):
 	# print("final", np.shape(final))
 	return final
 
+def read_filenames(filenames, length):
+	for file in filenames:
+			signals, atributes, specs = load_eeg_file(path + file)
+			signals = signals[:, :length]
+		examples_signal += [signals]
+		examples_atribute += [atributes]
+		
+	return examples_signal, examples_atribute	
+
+def get_filenames(path, num_channels, min_length=0, max_length=1e9999, max_num=-1, sample_frequency=200, length=1000):
+	files = os.listdir(path)
+	num_files_read = 0
+	filenames = []
+	for file in files:
+		if (file.split(".")[-1] != "eeghdf"):# and (file.split(".")[-1] != "fif"):
+			continue
+
+		if file.split(".")[-1] == "eeghdf":
+			signals, _, _ = load_eeg_file(path + file)
+			if signals.shape[1] < length:
+				continue
+			if (int(specs["number_channels"]) != num_channels):
+				# print("Not correct num_channels", num_channels, specs["number_channels"])
+				continue
+			if (int(specs["sample_frequency"]) != sample_frequency):
+				# print("Not correct sample_frequency", sample_frequency, specs["sample_frequency"])
+				continue
+			num_readings = signals.shape[1]
+
+		filenames += [path + file]
+		
+		if num_files_read-1 == max_num:
+			return filenames
+		num_files_read += 1
+
+	return filenames	
 
 # dataset = Dataset("./eeg-hdfstorage/data/")
 if __name__ == "__main__":
+	print("TYUIO")
 	dataset = EEGDataset("/mnt/data1/eegdbs/SEC-0.1/stanford/", num_examples=10, num_channels=44)
 	dataset.shuffle()
 	# dataset = EEGDataset("/Users/DanielLongo/server/mnt/home2/dlongo/eegML/generated_eegs/from_forward_model/", num_examples=10, num_channels=44)
