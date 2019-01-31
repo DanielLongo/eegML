@@ -33,6 +33,8 @@ class RecurrentDiscriminator(nn.Module):
 	# 	return out
 
 	def forward(self, x, *args):
+		self.rnn1.flatten_parameters()
+		self.rnn2.flatten_parameters()
 		if len(args) != 0:
 			assert(len(args) == 2), "Invalid args need len 2: h_0 and c_0"
 			out, _ = self.rnn1(x, (args[0], args[1])) #h_0, c_0
