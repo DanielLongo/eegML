@@ -26,7 +26,7 @@ NUM_NODES = 44
 # LENGTH = 1000
 LENGTH = 10000
 
-real_eegs = EEGDataset("/mnt/data1/eegdbs/SEC-0.1/stanford/", num_examples=10000, num_channels=NUM_NODES, batch_size=BATCH_SIZE, length=10000)#000)
+real_eegs = EEGDataset("/mnt/data1/eegdbs/SEC-0.1/stanford/", num_examples=5000, num_channels=NUM_NODES, batch_size=BATCH_SIZE, length=10000, delay=100000)#000)
 
 
 one = torch.ones([])
@@ -170,18 +170,15 @@ def main():
 			G_cost = -G
 			optimizerG.step()
 			
-			if (iters % 1000 == 0):
-				save_EEG(fake.cpu().detach().numpy(), NUM_NODES, 200, "./generated_eegs/generated-iter"+ str(iters) + "-fake-rG-long")
-				print("Epoch", iteration)
-				print("G_cost" , G_cost)
-				print("D_cost", D_cost)
-
+			# if (iters % 1000 == 0):
+			# 	save_EEG(fake.cpu().detach().numpy(), NUM_NODES, 200, "./generated_eegs/generated-iter"+ str(iters) + "-fake-rG-long")
+			# 	print("Epoch", iteration)
+			# 	print("G_cost" , G_cost)
+			# 	print("D_cost", D_cost)
+		save_EEG(fake.cpu().detach().numpy(), NUM_NODES, 200, "./generated_eegs/generated-" + str(iteration-1) + "-fake-rG-long")
+		save_EEG(real.cpu().detach().numpy(), NUM_NODES, 200, "./generated_eegs/generated-" + str(iteration-1) + "-real-rG-long")
 		print("Epoch", iteration)
 		print("G_cost" , G_cost)
 		print("D_cost", D_cost)
-
-		if (iteration % 1 == 0):
-			save_EEG(fake.cpu().detach().numpy(), NUM_NODES, 200, "./generated_eegs/generated-epoch"+ str(iteration) + "-fake-rG-long")
-			# save_EEG(real.cpu().detach().numpy(), NUM_NODES, 200, "./generated_eegs/generated-"+ str(iteration) + "-real-rGF-shuffle")
 if __name__ == "__main__":
 	main()

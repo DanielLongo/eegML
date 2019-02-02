@@ -154,6 +154,7 @@ def get_filenames(path, num_channels, length, min_length=0, max_length=1e9999, m
 
 		if file.split(".")[-1] == "eeghdf":
 			signals, _, specs = load_eeg_file(path + file)
+
 			if signals.shape[1] < length + delay:
 				continue
 			if (int(specs["number_channels"]) != num_channels):

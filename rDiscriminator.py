@@ -32,20 +32,25 @@ class RecurrentDiscriminator(nn.Module):
 	# 	out = self.fc2(out)
 	# 	return out
 
-	def forward(self, x, *args):
+	def forward(self, x, *args, return_states=False):
 		self.rnn1.flatten_parameters()
 		self.rnn2.flatten_parameters()
 		if len(args) != 0:
 			assert(len(args) == 2), "Invalid args need len 2: h_0 and c_0"
-			out, _ = self.rnn1(x, (args[0], args[1])) #h_0, c_0
+			out, (h_n, c_n) = self.rnn1(x, (args[0], args[1])) #h_0, c_0
+			# out, _ = self.rnn1(x, (args[0], args[1])) #h_0, c_0
 		else:
-			out, _ = self.rnn1(x)
+			out, (h_n, c_n) = self.rnn1(x)
+			# out, _ = self.rnn1(x)
 
-		out, (h_n, c_n) = self.rnn2(out)
-		out = h_n #TODO WHICH ONE
+		# out, (h_n, c_n) = self.rnn2(out)
+		_, (_,out) = self.rnn2(out)
+		# out = h_n #TODO WHICH ONE
 		out = out.view(-1, self.num_nodes * 1)
 		out = self.fc1(out)
 		out = self.fc2(out)
+		if (return_states):
+			return out, (h_n, c_n)
 		return out
 
 if __name__ == "__main__":
