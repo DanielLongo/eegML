@@ -25,9 +25,9 @@ BATCH_SIZE = 32
 LAMBDA = 10 # Gradient penalty lambda hyperparameter
 NUM_NODES = 42
 # LENGTH = 1000
-LENGTH = 10000
+LENGTH = 1000
 
-real_eegs = EEGDataset("/mnt/data1/eegdbs/SEC-0.1/stanford/", num_examples=5000, num_channels=NUM_NODES, batch_size=BATCH_SIZE, length=10000, delay=100000)#000)
+real_eegs = EEGDataset("/mnt/data1/eegdbs/SEC-0.1/stanford/", num_examples=5000, num_channels=NUM_NODES, batch_size=BATCH_SIZE, length=1000, delay=100000)#000)
 
 
 one = torch.ones([])
@@ -37,13 +37,13 @@ mone = one * -1
 netD = RecurrentDiscriminator(num_nodes=NUM_NODES, d=64)
 
 ## Pick Of Generators
-netG = RecurrentGenerator(num_nodes=NUM_NODES, d=50) 
+# netG = RecurrentGenerator(num_nodes=NUM_NODES, d=50) 
 # netGG = netG
-noise_gen_G = netG.generate_noise
 # netG = ForwardModelEnabledG(44, 50)
-# netG = ConditionalGenerator(num_nodes=44, d=64, y_input_size=20)
+netG = ConditionalGenerator(num_nodes=42, d=64, y_input_size=20)
 # netG = cGForwardModel(num_nodes=44, d=64, y_input_size=20)
 
+noise_gen_G = netG.generate_noise
 if PARALLEL:
 	netD = nn.DataParallel(netD)
 	netG = nn.DataParallel(netG)
@@ -176,8 +176,8 @@ def main():
 			# 	print("Epoch", iteration)
 			# 	print("G_cost" , G_cost)
 			# 	print("D_cost", D_cost)
-		save_EEG(fake.cpu().detach().numpy(), NUM_NODES, 200, "./generated_eegs/generated-" + str(iteration-1) + "-fake-rG-long-norm")
-		save_EEG(real.cpu().detach().numpy(), NUM_NODES, 200, "./generated_eegs/generated-" + str(iteration-1) + "-real-rG-long-norm")
+		save_EEG(fake.cpu().detach().numpy(), NUM_NODES, 200, "./generated_eegs/generated-" + str(iteration) + "-fake-rcG-short")
+		# save_EEG(real.cpu().detach().numpy(), NUM_NODES, 200, "./generated_eegs/generated-" + str(iteration-1) + "-real-rG-long-norm")
 		print("Epoch", iteration)
 		print("G_cost" , G_cost)
 		print("D_cost", D_cost)

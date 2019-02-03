@@ -21,7 +21,8 @@ class ConditionalGenerator(nn.Module):
 		x = torch.cat((x,y), 2)
 		out, _ = self.rnn1(x)
 		out, _ = self.rnn2(out)
-		return out
+		out *= 50
+		return out 
 
 	def generate_noise(self, batch_size, num_signals, num_nodes):
 		return [torch.randn(batch_size, num_signals, self.num_nodes), torch.randn(batch_size, num_signals, self.y_input_size)]

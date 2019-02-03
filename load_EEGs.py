@@ -143,7 +143,7 @@ def read_filenames(filenames, length, delay=10000):
 	examples_signal = []
 	examples_atribute = []
 	for file in filenames:
-		signals, atributes, specs = load_eeg_file(file, normalize=True)
+		signals, atributes, specs = load_eeg_file(file, normalize=False)
 		signals = signals[:, delay:length+delay]
 		examples_signal += [signals]
 		examples_atribute += [atributes]

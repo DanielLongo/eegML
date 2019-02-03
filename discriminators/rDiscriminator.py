@@ -32,7 +32,7 @@ class RecurrentDiscriminator(nn.Module):
 	# 	out = self.fc2(out)
 	# 	return out
 
-	def forward(self, x, *args, return_states=False):
+	def forward(self, x, *args, return_states=False, matching=False):
 		self.rnn1.flatten_parameters()
 		self.rnn2.flatten_parameters()
 		if len(args) != 0:
@@ -46,9 +46,11 @@ class RecurrentDiscriminator(nn.Module):
 		# out, (h_n, c_n) = self.rnn2(out)
 		_, (_,out) = self.rnn2(out)
 		# out = h_n #TODO WHICH ONE
-		out = out.view(-1, self.num_nodes * 1)
-		out = self.fc1(out)
+		rnn_out = out.view(-1, self.num_nodes * 1)
+		out = self.fc1(rnn_out)
 		out = self.fc2(out)
+		if matching:
+			return rnn_out, out
 		if (return_states):
 			return out, (h_n, c_n)
 		return out
