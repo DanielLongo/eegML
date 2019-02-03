@@ -18,12 +18,12 @@ class rDMinBatch(nn.Module):
 		self.T_tensor = nn.Parameter(T_ten_init, requires_grad=True)
 		self.fc = nn.Linear(self.featmap_dim + self.d, 1)
 
-	def forward(self, x):
+	def forward(self, x, matching=True):
 		"""
 		Architecture is similar to DCGANs
 		Add minibatch discrimination => Improved GAN.
 		"""
-		x, _ = self.rnn(x, matching=True)
+		x, _ = self.rnn(x, matching=matching)
 		# print("x", x.shape)
 		x = x.view(-1, self.featmap_dim)
 
