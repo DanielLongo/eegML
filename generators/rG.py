@@ -31,7 +31,7 @@ class RecurrentGenerator(nn.Module):
 			out, _ = self.rnn2(out)
 		if continuous:
 			return out, (h_n, c_n)
-		return out
+		return (out * 40)
 
 	def generate_noise(self, batch_size, num_signals, num_nodes):
 		return [torch.randn(batch_size, num_signals, num_nodes)]
