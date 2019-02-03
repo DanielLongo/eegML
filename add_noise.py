@@ -8,6 +8,7 @@ import torch.nn.functional as F
 import torch.optim as optim
 
 sys.path.append("./generators/")
+sys.path.append("./discriminators/")
 from rDiscriminator import RecurrentDiscriminator
 from forward_model_enabled_G import ForwardModelEnabledG
 from conditional_generator import ConditionalGenerator
@@ -22,7 +23,7 @@ ITERS = 30
 CRITIC_ITERS = 2 #3
 BATCH_SIZE = 32
 LAMBDA = 10 # Gradient penalty lambda hyperparameter
-NUM_NODES = 44
+NUM_NODES = 42
 # LENGTH = 1000
 LENGTH = 10000
 
@@ -175,8 +176,8 @@ def main():
 			# 	print("Epoch", iteration)
 			# 	print("G_cost" , G_cost)
 			# 	print("D_cost", D_cost)
-		save_EEG(fake.cpu().detach().numpy(), NUM_NODES, 200, "./generated_eegs/generated-" + str(iteration-1) + "-fake-rG-long")
-		save_EEG(real.cpu().detach().numpy(), NUM_NODES, 200, "./generated_eegs/generated-" + str(iteration-1) + "-real-rG-long")
+		save_EEG(fake.cpu().detach().numpy(), NUM_NODES, 200, "./generated_eegs/generated-" + str(iteration-1) + "-fake-rG-long-norm")
+		save_EEG(real.cpu().detach().numpy(), NUM_NODES, 200, "./generated_eegs/generated-" + str(iteration-1) + "-real-rG-long-norm")
 		print("Epoch", iteration)
 		print("G_cost" , G_cost)
 		print("D_cost", D_cost)

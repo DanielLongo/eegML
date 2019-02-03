@@ -7,6 +7,8 @@ import torch
 from torch.utils import data
 import h5py
 import random
+import sklearn
+from sklearn import preprocessing
 
 class EEGDataset(data.Dataset):
 	def __init__(self, data_dir, num_channels=19, num_examples=-1, batch_size=64, length=1000, delay=10000):
@@ -51,7 +53,7 @@ class EEGDataset(data.Dataset):
 		self.batched_filenames = split_into_batches(self.filenames, self.batch_size)
 
 
-def load_eeg_file(filename):
+def load_eeg_file(filename, normalize=False):
 	hdf = h5py.File(filename, "r")
 	atributes = hdf["patient"].attrs
 	rec = hdf["record-0"]
@@ -61,6 +63,10 @@ def load_eeg_file(filename):
 		"sample_frequency" : rec.attrs["sample_frequency"],
 		"number_channels" : rec.attrs["number_channels"]
 	}
+	if normalize:
+		# print(type(signals.value))
+		signals = sklearn.preprocessing.normalize((signals.value).T, axis=1).T
+		# print(signals.shape)
 	return signals, atributes, specs
 
 def parse_atributes(atributes):
@@ -137,7 +143,7 @@ def read_filenames(filenames, length, delay=10000):
 	examples_signal = []
 	examples_atribute = []
 	for file in filenames:
-		signals, atributes, specs = load_eeg_file(file)
+		signals, atributes, specs = load_eeg_file(file, normalize=True)
 		signals = signals[:, delay:length+delay]
 		examples_signal += [signals]
 		examples_atribute += [atributes]
@@ -153,7 +159,7 @@ def get_filenames(path, num_channels, length, min_length=0, max_length=1e9999, m
 			continue
 
 		if file.split(".")[-1] == "eeghdf":
-			signals, _, specs = load_eeg_file(path + file)
+			signals, _, specs = load_eeg_file(path + file, normalize=False)
 
 			if signals.shape[1] < length + delay:
 				continue
