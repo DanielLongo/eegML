@@ -48,7 +48,7 @@ class rDMinBatch(nn.Module):
 
 			out_tensor.append(out_i)
 
-		out_T = torch.cat(tuple(out_tensor)).view(Ms.size()[0], 50)
+		out_T = torch.cat(tuple(out_tensor)).view(Ms.size()[0], self.d)
 		x = torch.cat((x, out_T), 1)
 		# #### Minibatch Discrimination ###
 		# print('x', x.shape)
