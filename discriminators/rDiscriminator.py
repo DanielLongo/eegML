@@ -46,11 +46,11 @@ class RecurrentDiscriminator(nn.Module):
 		# out, (h_n, c_n) = self.rnn2(out)
 		_, (_,out) = self.rnn2(out)
 		# out = h_n #TODO WHICH ONE
-		rnn_out = out.view(-1, self.num_nodes * 1)
-		out = self.fc1(rnn_out)
-		out = self.fc2(out)
+		out = out.view(-1, self.num_nodes * 1)
+		matching_out = self.fc1(out)
+		out = self.fc2(matching_out)
 		if matching:
-			return rnn_out, out
+			return matching_out, out
 		if (return_states):
 			return out, (h_n, c_n)
 		return out

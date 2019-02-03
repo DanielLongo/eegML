@@ -10,6 +10,7 @@ import torch.optim as optim
 sys.path.append("./generators/")
 sys.path.append("./discriminators/")
 from rDiscriminator import RecurrentDiscriminator
+from rD_min_batch import rDMinBatch
 from forward_model_enabled_G import ForwardModelEnabledG
 from conditional_generator import ConditionalGenerator
 from c_forward_model import cGForwardModel
@@ -34,7 +35,8 @@ one = torch.ones([])
 mone = one * -1
 
 ## Pick Of Discriminators 
-netD = RecurrentDiscriminator(num_nodes=NUM_NODES, d=64)
+# netD = RecurrentDiscriminator(num_nodes=NUM_NODES, d=64)
+netD = rDMinBatch(num_nodes=NUM_NODES, d=64)
 
 ## Pick Of Generators
 # netG = RecurrentGenerator(num_nodes=NUM_NODES, d=50) 
@@ -189,7 +191,7 @@ def main():
 			# 	print("Epoch", iteration)
 			# 	print("G_cost" , G_cost)
 			# 	print("D_cost", D_cost)
-		save_EEG(fake.cpu().detach().numpy(), NUM_NODES, 200, "./generated_eegs/generated-" + str(iteration) + "-fake-cG-matching")
+		save_EEG(fake.cpu().detach().numpy(), NUM_NODES, 200, "./generated_eegs/generated-" + str(iteration) + "-fake-cG-matching-minB")
 		# save_EEG(real.cpu().detach().numpy(), NUM_NODES, 200, "./generated_eegs/generated-" + str(iteration-1) + "-real-rG-long-norm")
 		print("Epoch", iteration)
 		print("G_cost" , loss_G)
