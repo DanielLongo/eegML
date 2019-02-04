@@ -107,7 +107,7 @@ def create_optimizer(model, lr=.01, betas=None):
 		optimizer = torch.optim.Adam(model.parameters(), lr=lr, betas=betas)
 	return optimizer
 
-def save_images(generator, epoch, i, filename_prefix):
+def save_images_func(generator, epoch, i, filename_prefix):
 	fig = plt.figure(figsize=(10, 10))
 	gs = gridspec.GridSpec(10, 10)
 	gs.update(wspace=.05, hspace=.05)
@@ -130,10 +130,10 @@ def train_gan(discriminator, generator, image_loader, num_epochs, batch_size, g_
 	iters = 0
 	optimizerD = torch.optim.Adam(discriminator.parameters(), lr=1e-4, betas=(0.5, 0.999))
 	optimizerG = torch.optim.Adam(generator.parameters(), lr=1e-4, betas=(0.5, 0.999))
-	criterionD = nn.CrossEntropyLoss() # binary cross-entropy
-	criterionG = nn.MSELoss()
+	criterionD = nn.CrossEntropyLoss().cuda() # binary cross-entropy
+	criterionG = nn.MSELoss().cuda()
 	iters = 0
-	for iteration in range(num_epochs):
+	for epoch in range(num_epochs):
 		for x, _ in image_loader:
 			if (x.shape[0] != batch_size):
 				continue
@@ -192,7 +192,7 @@ def train_gan(discriminator, generator, image_loader, num_epochs, batch_size, g_
 
 			fake = autograd.Variable(generator(noise_v).data)
 			
-			inputv = autograd.Variable(x)
+			inputv = autograd.Variable(x).type(dtype)
 			feature_real,_ = discriminator(inputv, matching=True)
 			feature_fake,output = discriminator(fake, matching=True)
 			feature_real = torch.mean(feature_real,0)
@@ -206,8 +206,8 @@ def train_gan(discriminator, generator, image_loader, num_epochs, batch_size, g_
 			# 	print("D_cost", D_cost)
 		# save_EEG(fake.cpu().detach().numpy(), NUM_NODES, 200, "./generated_eegs/generated-" + str(iteration) + "-fake-cG-matching-minB")
 		# save_EEG(real.cpu().detach().numpy(), NUM_NODES, 200, "./generated_eegs/generated-" + str(iteration-1) + "-real-rG-long-norm")
-		save_images(generator, epoch, iters, filename_prefix)
-		print("Epoch", iteration)
+		save_images_func(generator, epoch, iters, filename_prefix)
+		print("Epoch", epoch)
 		print("G_cost" , loss_G)
 		print("D_cost", loss_D)
 if __name__ == "__main__":
@@ -226,6 +226,8 @@ if __name__ == "__main__":
 		torch.backends.cudnn.benchmark = True
 		dtype = torch.cuda.FloatTensor
 		use_cuda = True
+		discriminator = discriminator.cuda()
+		generator = generator.cuda()
 	else:
 		print("Running On CPU :(")
 		print("This may take a while")
