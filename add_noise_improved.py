@@ -50,8 +50,8 @@ if PARALLEL:
 	netD = nn.DataParallel(netD)
 	netG = nn.DataParallel(netG)
 
-optimizerD = optim.Adam(netD.parameters(), lr=1e-4, betas=(0.5, 0.999))
-optimizerG = optim.Adam(netG.parameters(), lr=1e-4, betas=(0.5, 0.999))
+optimizerD = optim.Adam(netD.parameters(), lr=1e-5, betas=(0.5, 0.99))
+optimizerG = optim.Adam(netG.parameters(), lr=1e-5, betas=(0.5, 0.99))
 
 criterionD = nn.CrossEntropyLoss() # binary cross-entropy
 criterionG = nn.MSELoss()

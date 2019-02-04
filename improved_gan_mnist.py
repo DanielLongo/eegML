@@ -156,6 +156,7 @@ def train_gan(discriminator, generator, image_loader, num_epochs, batch_size, g_
 
 			unl_output = discriminator(inputv)
 			loss_unl_real = -torch.mean(LSE(unl_output),0) +  torch.mean(F.softplus(LSE(unl_output),1),0)
+			real_loss = unl_output
 
 			# train with fake
 			# noise = discriminator.generate_noise(batch_size, LENGTH, NUM_NODES)
@@ -168,7 +169,10 @@ def train_gan(discriminator, generator, image_loader, num_epochs, batch_size, g_
 			fake = autograd.Variable(generator(noise_v).data)
 			unl_output = discriminator(fake.detach()) #fake images are separated from the graph #results will never gradient(be updated), so G will not be updated
 			loss_unl_fake = torch.mean(F.softplus(LSE(unl_output),1),0)
-			loss_D = loss_unl_real + loss_unl_fake
+			fake_loss = unl_output
+			# loss_D = loss_unl_real + loss_unl_fake
+			# loss_D = real_loss - fake_loss
+			loss_D = torch.mean(real_loss) - torch.mean(fake_loss)
 			loss_D.backward()# because detach(), backward() will not influence discriminator
 			optimizerD.step()
 
