@@ -34,135 +34,73 @@ def generate_nosie(batch_size, dim=100):
 	noise = torch.randn(batch_size, dim, 1, 1)
 	return noise
 
-# class Discriminator(nn.Module):
-# 	def __init__(self):
-# 		super(Discriminator, self).__init__()
-# 		self.conv1 = nn.Sequential(
-# 			nn.Conv2d(1, 32, [5,5], stride=[1,1]),
-# 			nn.LeakyReLU(negative_slope=.01),
-# 			nn.MaxPool2d([2,2], stride=[2,2]))
-# 		self.conv2 = nn.Sequential(
-# 			nn.Conv2d(32, 64, [5,5], stride=[1,1]),
-# 			nn.LeakyReLU(negative_slope=.01),
-# 			nn.MaxPool2d([2,2], stride=[2,2]))
-# 		self.fc1 = nn.Sequential(
-# 			nn.Linear((64*5*5), (64*5*5)),
-# 			nn.LeakyReLU(negative_slope=.01))
-# 		self.fc2 = nn.Sequential(
-# 			nn.Linear((64*5*5), 1),
-# 			nn.Sigmoid())
+class Discriminator(nn.Module):
+	def __init__(self):
+		super(Discriminator, self).__init__()
+		self.conv1 = nn.Sequential(
+			nn.Conv2d(1, 32, [5,5], stride=[1,1]),
+			nn.LeakyReLU(negative_slope=.01),
+			nn.MaxPool2d([2,2], stride=[2,2]))
+		self.conv2 = nn.Sequential(
+			nn.Conv2d(32, 64, [5,5], stride=[1,1]),
+			nn.LeakyReLU(negative_slope=.01),
+			nn.MaxPool2d([2,2], stride=[2,2]))
+		self.fc1 = nn.Sequential(
+			nn.Linear((64*5*5), (64*5*5)),
+			nn.LeakyReLU(negative_slope=.01))
+		self.fc2 = nn.Sequential(
+			nn.Linear((64*5*5), 1),
+			nn.Sigmoid())
 
 
-# 	def forward(self, x, matching=False):
-# 		out = self.conv1(x)
-# 		out = self.conv2(out)
-# 		out = out.view(out.shape[0], -1)
-# 		out = self.fc1(out)
-# 		final = self.fc2(out)
-# 		if matching:
-# 			return out, final
-# 		return final
+	def forward(self, x, matching=False):
+		out = self.conv1(x)
+		out = self.conv2(out)
+		out = out.view(out.shape[0], -1)
+		out = self.fc1(out)
+		final = self.fc2(out)
+		if matching:
+			return out, final
+		return final
 
-# class Generator(nn.Module):
-# 	def __init__(self):
-# 		super(Generator, self).__init__()
-# 		self.deconv1 = nn.Sequential(
-# 			nn.ConvTranspose2d(100, 128, [2,2], stride=[1,1]),
-# 			nn.BatchNorm2d(128),
-# 			nn.ReLU())
-# 		self.deconv2 = nn.Sequential(
-# 			nn.ConvTranspose2d(128, 256, [3,3], stride=[1,1]),
-# 			nn.BatchNorm2d(256),
-# 			nn.ReLU())
-# 		self.deconv3 = nn.Sequential(
-# 			nn.ConvTranspose2d(256, 256, [4,4], stride=[2,2], padding=1),
-# 			nn.BatchNorm2d(256),
-# 			nn.ReLU())
-# 		self.deconv4 = nn.Sequential(
-# 			nn.ConvTranspose2d(256, 128, [4,4], stride=[2,2], padding=1),
-# 			nn.BatchNorm2d(128))
-# 		self.deconv5 = nn.Sequential(
-# 			nn.ConvTranspose2d(128, 1, [4,4], stride=[2,2], padding=1),
-# 			nn.Tanh())
+class Generator(nn.Module):
+	def __init__(self):
+		super(Generator, self).__init__()
+		self.deconv1 = nn.Sequential(
+			nn.ConvTranspose2d(100, 128, [2,2], stride=[1,1]),
+			nn.BatchNorm2d(128),
+			nn.ReLU())
+		self.deconv2 = nn.Sequential(
+			nn.ConvTranspose2d(128, 256, [3,3], stride=[1,1]),
+			nn.BatchNorm2d(256),
+			nn.ReLU())
+		self.deconv3 = nn.Sequential(
+			nn.ConvTranspose2d(256, 256, [4,4], stride=[2,2], padding=1),
+			nn.BatchNorm2d(256),
+			nn.ReLU())
+		self.deconv4 = nn.Sequential(
+			nn.ConvTranspose2d(256, 128, [4,4], stride=[2,2], padding=1),
+			nn.BatchNorm2d(128))
+		self.deconv5 = nn.Sequential(
+			nn.ConvTranspose2d(128, 1, [4,4], stride=[2,2], padding=1),
+			nn.Tanh())
 
-# 	def forward(self, x):
-# 		# print("x", x.shape)
-# 		out = self.deconv1(x)
-# 		out = self.deconv2(out)
-# 		out = self.deconv3(out)
-# 		out = self.deconv4(out)
-# 		out = self.deconv5(out)
-# 		return out
-
-
-	# def weight_init(m, mean, std):
-	# 	if isinstance(m, nn.ConvTranspose2d) or isinstance(m, nn.Conv2d):
-	# 		m.weight.data.normal_(mean, std)
-	# 		m.bias.data.zero_()
-
-class Generator(torch.nn.Module):
-    def __init__(self, channels):
-        super().__init__()
-        # Filters [1024, 512, 256]
-        # Input_dim = 100
-        # Output_dim = C (number of channels)
-        self.main_module = nn.Sequential(
-            # Z latent vector 100
-            nn.ConvTranspose2d(in_channels=100, out_channels=1024, kernel_size=4, stride=1, padding=0),
-            nn.BatchNorm2d(num_features=1024),
-            nn.ReLU(True),
-
-            # State (1024x4x4)
-            nn.ConvTranspose2d(in_channels=1024, out_channels=512, kernel_size=4, stride=2, padding=1),
-            nn.BatchNorm2d(num_features=512),
-            nn.ReLU(True),
-
-            # State (512x8x8)
-            nn.ConvTranspose2d(in_channels=512, out_channels=256, kernel_size=4, stride=2, padding=1),
-            nn.BatchNorm2d(num_features=256),
-            nn.ReLU(True),
-
-            # State (256x16x16)
-            nn.ConvTranspose2d(in_channels=256, out_channels=channels, kernel_size=4, stride=2, padding=1))
-            # output of main module --> Image (Cx32x32)
-
-        self.output = nn.Tanh()
-
-    def forward(self, x):
-        x = self.main_module(x)
-        return self.output(x)
+	def forward(self, x):
+		# print("x", x.shape)
+		out = self.deconv1(x)
+		out = self.deconv2(out)
+		out = self.deconv3(out)
+		out = self.deconv4(out)
+		out = self.deconv5(out)
+		return out
 
 
-class Discriminator(torch.nn.Module):
-    def __init__(self, channels):
-        super().__init__()
-        # Filters [256, 512, 1024]
-        # Input_dim = channels (Cx64x64)
-        # Output_dim = 1
-        self.main_module = nn.Sequential(
-            # Image (Cx32x32)
-            nn.Conv2d(in_channels=channels, out_channels=256, kernel_size=4, stride=2, padding=1),
-            nn.LeakyReLU(0.2, inplace=True),
+	def weight_init(m, mean, std):
+		if isinstance(m, nn.ConvTranspose2d) or isinstance(m, nn.Conv2d):
+			m.weight.data.normal_(mean, std)
+			m.bias.data.zero_()
 
-            # State (256x16x16)
-            nn.Conv2d(in_channels=256, out_channels=512, kernel_size=4, stride=2, padding=1),
-            nn.BatchNorm2d(512),
-            nn.LeakyReLU(0.2, inplace=True),
 
-            # State (512x8x8)
-            nn.Conv2d(in_channels=512, out_channels=1024, kernel_size=4, stride=2, padding=1),
-            nn.BatchNorm2d(1024),
-            nn.LeakyReLU(0.2, inplace=True))
-            # outptut of main module --> State (1024x4x4)
-
-        self.output = nn.Sequential(
-            nn.Conv2d(in_channels=1024, out_channels=1, kernel_size=4, stride=1, padding=0),
-            # Output 1
-            nn.Sigmoid())
-
-    def forward(self, x):
-        x = self.main_module(x)
-        return self.output(x)
 def create_optimizer(model, lr=.01, betas=None):
 	if betas == None:
 		optimizer = torch.optim.Adam(model.parameters(), lr=lr)
@@ -203,6 +141,25 @@ def train_gan(discriminator, generator, image_loader, num_epochs, batch_size, g_
 		for x, _ in image_loader:
 			if (x.shape[0] != batch_size):
 				continue
+				
+			# z = generate_nosie(batch_size)
+			# fake_images = generator(z)
+			# g_result = discriminator(fake_images).squeeze()
+			# g_cost = BCE(g_result, torch.ones(batch_size))
+			# g_cost.backward()
+			# g_optimizer.step()
+			# g_optimizer.zero_grad()
+
+			# d_optimizer.zero_grad()
+			# z = generate_nosie(batch_size)
+			# fake_images = generator(z)
+			# d_spred_fake = discriminator(fake_images).squeeze()
+			# d_cost_fake = BCE(d_spred_fake, torch.zeros(batch_size))
+			# d_spred_real = discriminator(real_data).squeeze()
+			# d_cost_real = BCE(d_spred_real, torch.ones(batch_size))
+			# d_cost = d_cost_real + d_cost_fake
+			# d_cost.backward()
+			# d_optimizer.step()
 			iters += 1
 			############################
 			# (1) Update D network
@@ -213,8 +170,8 @@ def train_gan(discriminator, generator, image_loader, num_epochs, batch_size, g_
 			# for p in discriminator.parameters():
 				# p.requires_grad = False # to avoid computation
 			
-			discriminator.zero_grad()
-			generator.zero_grad()
+			optimizerD.zero_grad()
+			optimizerG.zero_grad()
 			inputv = autograd.Variable(x).type(dtype)
 			d_real = discriminator(inputv)
 
@@ -245,8 +202,8 @@ def train_gan(discriminator, generator, image_loader, num_epochs, batch_size, g_
 			# for p in discriminator.parameters():
 			# 	p.requires_grad = True
 
-			discriminator.zero_grad()
-			generator.zero_grad()
+			optimizerD.zero_grad()
+			optimizerG.zero_grad()
 
 			# noise = discriminator.generate_noise(batch_size, LENGTH, NUM_NODES)
 			noise = generate_nosie(x.shape[0]).type(dtype)
@@ -269,8 +226,8 @@ def train_gan(discriminator, generator, image_loader, num_epochs, batch_size, g_
 			# 	print("Epoch", iteration)
 			# 	print("G_cost" , G_cost)
 			# 	print("D_cost", D_cost)
-		# save_EEG(fake.cpu().detach().numpy(), NUM_NODES, 200, "./generated_eegs/generated-" + str(iteration) + "-fake-cG-matching-minB")
-		# save_EEG(real.cpu().detach().numpy(), NUM_NODES, 200, "./generated_eegs/generated-" + str(iteration-1) + "-real-rG-long-norm")
+# 		# save_EEG(fake.cpu().detach().numpy(), NUM_NODES, 200, "./generated_eegs/generated-" + str(iteration) + "-fake-cG-matching-minB")
+# 		# save_EEG(real.cpu().detach().numpy(), NUM_NODES, 200, "./generated_eegs/generated-" + str(iteration-1) + "-real-rG-long-norm")
 		save_images_func(generator, epoch, iters, filename_prefix)
 		print("Epoch", epoch)
 		print("G_cost" , loss_G)
