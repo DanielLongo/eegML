@@ -97,8 +97,8 @@ Tensor = torch.cuda.FloatTensor if cuda else torch.FloatTensor
 # ----------
 
 for epoch in range(n_epochs):
-	dataloader.shuffle()
-	for i, imgs in enumerate(dataloader):
+	real_eegs.shuffle()
+	for i, imgs in enumerate(real_eegs):
 
 		# Adversarial ground truths
 		valid = Variable(Tensor(imgs.shape[0], 1).fill_(1.0), requires_grad=False)
