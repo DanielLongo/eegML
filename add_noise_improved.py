@@ -122,7 +122,7 @@ def main():
 			# for p in netG.parameters():
 			# 	p.requires_grad = False # to avoid computation
 			
-			netD.zero_grad()
+			optimizerD.zero_grad()
 			inputv = autograd.Variable(real_eegs[i])
 
 			if USE_CUDA:
@@ -162,7 +162,7 @@ def main():
 			# for p in netG.parameters():
 			# 	p.requires_grad = True
 
-			netG.zero_grad()
+			optimizerG.zero_grad()
 
 			# noise = netG.generate_noise(BATCH_SIZE, LENGTH, NUM_NODES)
 			noise = noise_gen_G(BATCH_SIZE, LENGTH, NUM_NODES)	
