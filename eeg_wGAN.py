@@ -114,7 +114,7 @@ for epoch in range(n_epochs):
 		optimizer_D.zero_grad()
 
 		# Sample noise as generator input
-		z = Variable(generate_noise(batch_size))
+		z = Variable(generate_noise(batch_size)).cuda()
 
 		# Generate a batch of images
 		gen_imgs = generator(z)
