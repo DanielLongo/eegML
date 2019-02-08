@@ -122,7 +122,7 @@ for epoch in range(n_epochs):
 		# Loss measures generator's ability to fool the discriminator
 		gradient_penalty = compute_gradient_penalty(discriminator, real_imgs.data, gen_imgs.data)
 		real_validity = discriminator(real_imgs)
-				fake_validity = discriminator(gen_imgs)
+		fake_validity = discriminator(gen_imgs)
 		d_loss = -torch.mean(real_validity) + torch.mean(fake_validity) + lambda_gp * gradient_penalty
 		#g_loss = adversarial_loss(discriminator(gen_imgs), valid)
 
