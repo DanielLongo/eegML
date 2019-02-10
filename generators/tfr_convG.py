@@ -7,10 +7,10 @@ import torch.nn as nn
 import torch.nn.functional as F
 import numpy as np
 
-class ConvGenerator(nn.Module):
+class ConvGeneratorTFR(nn.Module):
 	def __init__(self):
 		self.channels = 1
-		super(ConvGenerator,  self).__init__()
+		super(ConvGeneratorTFR,  self).__init__()
 
 
 		# self.conv_blocks = nn.Sequential(

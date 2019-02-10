@@ -3,9 +3,9 @@ import torch.nn.functional as F
 import torch
 import numpy as np
 
-class ConvDiscriminator(nn.Module):
+class ConvDiscriminatorTFR(nn.Module):
 	def __init__(self):
-		super(ConvDiscriminator, self).__init__()
+		super(ConvDiscriminatorTFR, self).__init__()
 
 		def discriminator_block(in_filters, out_filters, bn=True):
 			block = [   nn.Conv2d(in_filters, out_filters, [3,5], [2,1], padding=0),
@@ -56,7 +56,7 @@ class ConvDiscriminator(nn.Module):
 			ch5A = ch5A.view(ch5A.shape[0], 1, ch5A.shape[1], ch5A.shape[2])
 		if (len(ch5D.shape) == 3):
 			ch5D = ch5D.view(ch5D.shape[0], 1, ch5D.shape[1], ch5D.shape[2])
-			
+
 		out_ch5A = self.model_ch5A(ch5A)
 		# print(out_ch5A.shape)
 		out_ch5A = out_ch5A.view(out_ch5A.shape[0], -1)
