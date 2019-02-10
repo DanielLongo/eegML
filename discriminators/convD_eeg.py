@@ -10,7 +10,7 @@ class ConvDiscriminator(nn.Module):
 		super(ConvDiscriminator, self).__init__()
 
 		def discriminator_block(in_filters, out_filters, bn=True):
-			block = [   nn.Conv2d(in_filters, out_filters, 3, 2, 1),
+			block = [   nn.Conv2d(in_filters, out_filters, [3,5], [2,1], padding=0),
 						nn.LeakyReLU(0.2, inplace=True),
 						nn.Dropout2d(0.25)]
 			if bn:
@@ -21,20 +21,30 @@ class ConvDiscriminator(nn.Module):
 			*discriminator_block(self.channels, 16, bn=False),
 			*discriminator_block(16, 32),
 			*discriminator_block(32, 64),
-			*discriminator_block(64, 128),
+
+			*discriminator_block(64, 32),
+			*discriminator_block(32, 16),
+			*discriminator_block(16, 8),
+
+			*discriminator_block(8, 4),
 		)
 
 		# The height and width of downsampled image
-		ds_size = self.img_size // 2**4
-		self.adv_layer = nn.Sequential( nn.Linear(128*ds_size**2, 1),
+		self.fc1 = nn.Sequential( nn.Linear(4*6*16, 16),
+										nn.LeakyReLU(.2, inplace=True))
+		self.fc2 = nn.Sequential( nn.Linear(16, 1),
 										nn.Sigmoid())
 
-	def forward(self, img):
+	def forward(self, img, matching=False):
+		if (len(img.shape) == 3):
+			img = img.view(img.shape[0], 1, img.shape[1], img.shape[2])
 		out = self.model(img)
 		out = out.view(out.shape[0], -1)
-		validity = self.adv_layer(out)
-
-		return validity
+		out = self.fc1(out)
+		final = self.fc2(out)
+		if matching:
+			return out, final
+		return final
 		
 # class ConvDiscriminator(nn.Module):
 # 	def __init__(self, img_shape):

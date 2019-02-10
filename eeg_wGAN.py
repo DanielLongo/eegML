@@ -12,6 +12,7 @@ from torch.autograd import Variable
 
 import torch.nn as nn
 import torch.nn.functional as F
+import torch.autograd as autograd
 import torch
 
 sys.path.append("./generators")
@@ -19,12 +20,13 @@ sys.path.append("./discriminators")
 from convG_eeg import ConvGenerator
 from convD_eeg import ConvDiscriminator
 from load_EEGs import EEGDataset
+from utils import save_EEG
 
 os.makedirs('images', exist_ok=True)
 
 n_epochs = 200
 batch_size = 64
-lr = 0.00005
+lr = 0.0002
 b1 = .5
 b2 = .999
 n_cpu = 8
@@ -32,6 +34,8 @@ latent_dim = 100
 img_size = 32
 channels = 1
 sample_interval = 400
+lambda_gp = 10
+n_critic = 3
 
 img_shape = (channels, img_size, img_size)
 
@@ -65,7 +69,10 @@ def compute_gradient_penalty(D, real_samples, fake_samples):
 	# Random weight term for interpolation between real and fake samples
 	alpha = Tensor(np.random.random((real_samples.size(0), 1, 1, 1)))
 	# Get random interpolation between real and fake samples
+	# print("real samples", real_samples.shape)
+	# print("fake samples", fake_samples.shape)
 	interpolates = (alpha * real_samples + ((1 - alpha) * fake_samples)).requires_grad_(True)
+	# print("interpolates", interpolates.shape)
 	d_interpolates = D(interpolates)
 	fake = Variable(Tensor(real_samples.shape[0], 1).fill_(1.0), requires_grad=False)
 	# Get gradient w.r.t. interpolates
@@ -84,7 +91,7 @@ def compute_gradient_penalty(D, real_samples, fake_samples):
 # discriminator.apply(weights_init_normal)
 
 # Configure data loader
-real_eegs = EEGDataset("/mnt/data1/eegdbs/SEC-0.1/stanford/", num_examples=5000, num_channels=44, batch_size=batch_size, length=1004, delay=100000)
+real_eegs = EEGDataset("/mnt/data1/eegdbs/SEC-0.1/stanford/", num_examples=50000, num_channels=44, batch_size=batch_size, length=1004, delay=100000)
 
 # Optimizers
 optimizer_G = torch.optim.Adam(generator.parameters(), lr=lr, betas=(b1, b2))
@@ -99,13 +106,15 @@ Tensor = torch.cuda.FloatTensor if cuda else torch.FloatTensor
 for epoch in range(n_epochs):
 	real_eegs.shuffle()
 	for i, imgs in enumerate(real_eegs):
+		if (imgs.shape[0] != batch_size):
+			continue
 
 		# Adversarial ground truths
 		valid = Variable(Tensor(imgs.shape[0], 1).fill_(1.0), requires_grad=False)
 		fake = Variable(Tensor(imgs.shape[0], 1).fill_(0.0), requires_grad=False)
 
 		# Configure input
-		real_imgs = Variable(imgs.type(Tensor))
+		real_imgs = Variable(imgs.type(Tensor)).view(imgs.shape[0], 1, imgs.shape[1], imgs.shape[2]).cuda()
 
 		# -----------------
 		#  Train Discriminator
@@ -117,7 +126,7 @@ for epoch in range(n_epochs):
 		z = Variable(generate_noise(batch_size)).cuda()
 
 		# Generate a batch of images
-		gen_imgs = generator(z)
+		gen_imgs = generator(z) #* 20
 
 		# Loss measures generator's ability to fool the discriminator
 		gradient_penalty = compute_gradient_penalty(discriminator, real_imgs.data, gen_imgs.data)
@@ -132,21 +141,21 @@ for epoch in range(n_epochs):
 		# ---------------------
 		#  Train Generator
 		# ---------------------
+		if i % n_critic == 0:
+			optimizer_G.zero_grad()
 
-		optimizer_G.zero_grad()
+			# Measure discriminator's ability to classify real from generated samples
+			fake_imgs = generator(z)
 
-		# Measure discriminator's ability to classify real from generated samples
-		fake_imgs = generator(z)
+			fake_validity = discriminator(fake_imgs)
+			g_loss = -torch.mean(fake_validity)
 
-		fake_validity = discriminator(fake_imgs)
-		g_loss = -torch.mean(fake_validity)
+			g_loss.backward()
+			optimizer_G.step()
 
-		g_loss.backward()
-		optimizer_G.step()
-
-		print ("[Epoch %d/%d] [Batch %d/%d] [D loss: %f] [G loss: %f]" % (epoch, n_epochs, i, len(dataloader),
+		print ("[Epoch %d/%d] [Batch %d/%d] [D loss: %f] [G loss: %f]" % (epoch, n_epochs, i, len(real_eegs),
 															d_loss.item(), g_loss.item()))
-
+	save_EEG(gen_imgs.cpu().detach().view(batch_size, 1004, 44).numpy(), 44, 200, "./generated_eegs/generated-"+ str(epoch) + "-fake-conv-wgp")
 		# batches_done = epoch * len(dataloader) + i
 		# if batches_done % sample_interval == 0:
 			# save_image(gen_imgs.data[:25], 'images/%d.png' % batches_done, nrow=5, normalize=True)

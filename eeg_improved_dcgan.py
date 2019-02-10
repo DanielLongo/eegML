@@ -17,7 +17,7 @@ import torch
 sys.path.append("./generators")
 sys.path.append("./discriminators")
 from convG_eeg import ConvGenerator
-from convD_eeg import ConvDiscriminator
+from convD_min_batch import ConvDMinBatch
 from load_EEGs import EEGDataset
 from utils import save_EEG
 
@@ -52,7 +52,7 @@ adversarial_loss = torch.nn.BCELoss()
 
 # Initialize generator and discriminator
 generator = ConvGenerator(img_shape, latent_dim)
-discriminator = ConvDiscriminator(img_shape)
+discriminator = ConvDMinBatch(42, 16)
 
 generate_noise = generator.generate_noise
 
@@ -66,7 +66,7 @@ if cuda:
 # discriminator.apply(weights_init_normal)
 
 # Configure data loader
-real_eegs = EEGDataset("/mnt/data1/eegdbs/SEC-0.1/stanford/", num_examples=50000, num_channels=44, batch_size=batch_size, length=1004, delay=100000)
+real_eegs = EEGDataset("/mnt/data1/eegdbs/SEC-0.1/stanford/", num_examples=10000, num_channels=44, batch_size=batch_size, length=1004, delay=100000)
 
 # Optimizers
 optimizer_G = torch.optim.Adam(generator.parameters(), lr=lr, betas=(b1, b2))
@@ -128,7 +128,7 @@ for epoch in range(n_epochs):
 
 		print ("[Epoch %d/%d] [Batch %d/%d] [D loss: %f] [G loss: %f]" % (epoch, n_epochs, i, len(real_eegs),
 															d_loss.item(), g_loss.item()))
-	save_EEG(gen_imgs.cpu().detach().view(batch_size, 1004, 44).numpy(), 44, 200, "./generated_eegs/generated-"+ str(epoch) + "-fake-conv-A")
+	save_EEG(gen_imgs.cpu().detach().view(batch_size, 1004, 44).numpy(), 44, 200, "./generated_eegs/generated-"+ str(epoch) + "-fake-conv-impro")
 	print("Save @ Epoch", epoch)
 		# batches_done = epoch * len(dataloader) + i
 		# if batches_done % sample_interval == 0:

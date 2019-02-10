@@ -102,7 +102,7 @@ def main():
 					real = real.cuda()
 				real_v = autograd.Variable(real)
 
-				netD.zero_grad()
+				optimizerD.zero_grad()
 
 				# train with real
 				D_real = netD(real_v)
@@ -147,7 +147,7 @@ def main():
 			# for p in netG.parameters():
 			# 	p.requires_grad = True
 
-			netG.zero_grad()
+			optimizerG.zero_grad()
 
 			# noise = netG.generate_noise(BATCH_SIZE, LENGTH, NUM_NODES)
 			noise = noise_gen_G(BATCH_SIZE, LENGTH, NUM_NODES)	
