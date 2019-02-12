@@ -108,8 +108,10 @@ for epoch in range(n_epochs):
 		# Generate a batch of images
 		gen_noise = generator(z)# * 20
 		estimated = estimated_eegs[i]
+		estimated = Variable(estimated)
 		if cuda:
 			estimated = estimated.cuda()
+
 		gen_imgs = gen_noise + estimated.view(batch_size, 1, 1004, 44)
 
 		# Loss measures generator's ability to fool the discriminator
