@@ -37,7 +37,7 @@ class ConvGeneratorTFR(nn.Module):
 			nn.ConvTranspose2d(16, 8, [3,3], stride=[2,2], padding=0),
 			nn.BatchNorm2d(8, 0.8),
 			nn.LeakyReLU(0.2, inplace=True),
-			nn.ConvTranspose2d(8, self.channels, [4,4], stride=[2,2], padding=0),
+			nn.ConvTranspose2d(8, self.channels, [4,4], stride=[2,1], padding=0),
 			nn.BatchNorm2d(self.channels, 0.8),
 			nn.Tanh()
 		)
@@ -52,15 +52,15 @@ class ConvGeneratorTFR(nn.Module):
 			nn.ConvTranspose2d(16, 8, [3,3], stride=[2,2], padding=0),
 			nn.BatchNorm2d(8, 0.8),
 			nn.LeakyReLU(0.2, inplace=True),
-			nn.ConvTranspose2d(8, self.channels, [4,4], stride=[2,2], padding=0),
+			nn.ConvTranspose2d(8, self.channels, [4,4], stride=[2,1], padding=0),
 			nn.BatchNorm2d(self.channels, 0.8),
 			nn.Tanh()
 		)
 
 	def forward(self, z):
 		#TODO: FIX SHAPES DURING CONV
-		ch5A = self.conv_blocks_ch5A(z)[:,:, :1002, :]
-		ch5D = self.conv_blocks_ch5D(z)[:,:, :1002, :]
+		ch5A = self.conv_blocks_ch5A(z)[:,:, :1000, :]
+		ch5D = self.conv_blocks_ch5D(z)[:,:, :1000, :]
 		return ch5A, ch5D
 
 	def generate_noise(self, batch_size):
@@ -68,7 +68,7 @@ class ConvGeneratorTFR(nn.Module):
 
 if __name__ == "__main__":
 	# z = torch.randn((16, 100, 44))#.cuda()
-	G = ConvGenerator()
+	G = ConvGeneratorTFR()
 	z = G.generate_noise(30)
 	ch5A, ch5D = G(z)
 	print(ch5A.shape)

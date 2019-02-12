@@ -24,6 +24,6 @@ import numpy as np
 def save_EEG_tfr(ch5A, ch5D, num_channels, frequency, filename, channel_names=None, wtype='sym3'):
 	recon_arr = pywt.idwt(ch5A, ch5D, wtype)
 	if recon_arr.shape[1] < 10000:
-		np.save(filename, recon_arr[0, :, :])	
+		np.save(filename, recon_arr[0, :, :].reshape(1000, 44))	
 	else:
-		np.save(filename, recon_arr[0, :10000, :])
+		np.save(filename, recon_arr[0, :10000, :].reshape(1000, 44))

@@ -8,7 +8,7 @@ class ConvDiscriminatorTFR(nn.Module):
 		super(ConvDiscriminatorTFR, self).__init__()
 
 		def discriminator_block(in_filters, out_filters, bn=True):
-			block = [   nn.Conv2d(in_filters, out_filters, [3,5], [2,1], padding=0),
+			block = [   nn.Conv2d(in_filters, out_filters, [3,3], [2,1], padding=0),
 						nn.LeakyReLU(0.2, inplace=True),
 						nn.Dropout2d(0.25)]
 			if bn:
@@ -42,14 +42,14 @@ class ConvDiscriminatorTFR(nn.Module):
 		)
 
 		# The height and width of downsampled image
-		self.fc1_ch5A = nn.Sequential( nn.Linear(2 * 12 * 8, 128),
+		self.fc1_ch5A = nn.Sequential( nn.Linear(2 * 8 * 8, 128),
 										nn.LeakyReLU(.2, inplace=True))
-		self.fc1_ch5D = nn.Sequential( nn.Linear(2 * 12 * 8, 128),
+		self.fc1_ch5D = nn.Sequential( nn.Linear(2 * 8 * 8, 128),
 										nn.LeakyReLU(.2, inplace=True))
 		self.fc2 = nn.Sequential( nn.Linear(256, 64),
 										nn.LeakyReLU(.2, inplace=True))
 		self.fc3 = nn.Sequential( nn.Linear(64, 1),
-			nn.LeakyReLU(.2, inplace=True))
+			nn.Sigmoid())
 
 	def forward(self, ch5A, ch5D, matching=False):
 		if (len(ch5A.shape) == 3):
@@ -57,6 +57,7 @@ class ConvDiscriminatorTFR(nn.Module):
 		if (len(ch5D.shape) == 3):
 			ch5D = ch5D.view(ch5D.shape[0], 1, ch5D.shape[1], ch5D.shape[2])
 
+		# print(ch5A.shape)
 		out_ch5A = self.model_ch5A(ch5A)
 		# print(out_ch5A.shape)
 		out_ch5A = out_ch5A.view(out_ch5A.shape[0], -1)
@@ -88,10 +89,10 @@ class ConvDiscriminatorTFR(nn.Module):
 # 		return validity
 
 if __name__ == "__main__":
-	xA = torch.ones(64, 1, 1004, 44)
-	xD = torch.ones(64, 1, 1004, 44)
+	xA = torch.ones(64, 1, 1000, 24)
+	xD = torch.ones(64, 1, 1000, 24)
 	# x = torch.ones(64, 1, 32, 32)
-	d = ConvDiscriminator()
+	d = ConvDiscriminatorTFR()
 	z = d(xA,xD)
 	# print("Z",z)
 	print("Z shape", z.shape)

@@ -107,7 +107,10 @@ for epoch in range(n_epochs):
 
 		# Generate a batch of images
 		gen_noise = generator(z)# * 20
-		gen_imgs = gen_noise + estimated_eegs[i]
+		estimated = estimated_eegs[i]
+		if cuda:
+			estimated = estimated.cuda()
+		gen_imgs = gen_noise + estimated.view(batch_size, 1, 1004, 44)
 
 		# Loss measures generator's ability to fool the discriminator
 		g_loss = adversarial_loss(discriminator(gen_imgs), valid)
@@ -131,7 +134,7 @@ for epoch in range(n_epochs):
 
 		print ("[Epoch %d/%d] [Batch %d/%d] [D loss: %f] [G loss: %f]" % (epoch, n_epochs, i, len(real_eegs),
 															d_loss.item(), g_loss.item()))
-	save_EEG(gen_imgs.cpu().detach().view(batch_size, 1004, 44).numpy(), 44, 200, "./generated_eegs/generated-"+ str(epoch) + "-fake-conv-A")
+	save_EEG(gen_imgs.cpu().detach().view(batch_size, 1004, 44).numpy(), 44, 200, "./generated_eegs/generated-"+ str(epoch) + "-fake-conv-add")
 	print("Save @ Epoch", epoch)
 		# batches_done = epoch * len(dataloader) + i
 		# if batches_done % sample_interval == 0:

@@ -83,7 +83,7 @@ if cuda:
 # discriminator.apply(weights_init_normal)
 
 # Configure data loader
-real_eegs = EEGDataset("/mnt/data1/eegdbs/SEC-0.1/stanford/", num_examples=50000, num_channels=44, batch_size=batch_size, length=1004, delay=100000)
+real_eegs = EEGDataset("/mnt/data1/eegdbs/SEC-0.1/stanford/", num_examples=50000, num_channels=44, batch_size=batch_size, length=1000, delay=100000)
 
 # Optimizers
 optimizer_G = torch.optim.Adam(generator.parameters(), lr=lr, betas=(b1, b2))
@@ -102,8 +102,8 @@ for epoch in range(n_epochs):
 			continue
 
 		# Adversarial ground truths
-		valid = Variable(Tensor(imgs.shape[0], 1).fill_(1.0), requires_grad=False)
-		fake = Variable(Tensor(imgs.shape[0], 1).fill_(0.0), requires_grad=False)
+		valid = Variable(Tensor(imgs.shape[0], 1).fill_(1.0), requires_grad=False)#.cuda()
+		fake = Variable(Tensor(imgs.shape[0], 1).fill_(0.0), requires_grad=False)#.cuda()
 
 		# Configure input
 		real_imgs = Variable(imgs.type(Tensor))
@@ -136,7 +136,9 @@ for epoch in range(n_epochs):
 		optimizer_D.zero_grad()
 
 		# Measure discriminator's ability to classify real from generated samples
-		real_ch5A, real_ch5D = pywt.dwt(real_imgs, wtype)
+		real_ch5A, real_ch5D = pywt.dwt(real_imgs.cpu().numpy(), wtype)
+		real_ch5A = torch.from_numpy(real_ch5A).cuda()
+		real_ch5D = torch.from_numpy(real_ch5D).cuda() 
 		real_loss = adversarial_loss(discriminator(real_ch5A, real_ch5D), valid)
 		fake_loss = adversarial_loss(discriminator(fake_ch5A.detach(), fake_ch5D.detach()), fake)
 		d_loss = (real_loss + fake_loss) / 2
@@ -146,7 +148,7 @@ for epoch in range(n_epochs):
 
 		print ("[Epoch %d/%d] [Batch %d/%d] [D loss: %f] [G loss: %f]" % (epoch, n_epochs, i, len(real_eegs),
 															d_loss.item(), g_loss.item()))
-	save_EEG_tfr(fake_ch5A.cpu().detach(), fake_ch5D.cpu().detach(), 44, 200, "./generated_eegs/generated-"+ str(epoch) + "-fake-conv-A")
+	save_EEG_tfr(fake_ch5A.cpu().detach().numpy(), fake_ch5D.cpu().detach().numpy(), 44, 200, "./generated_eegs/generated-"+ str(epoch) + "-fake-conv-tfr")
 	print("Save @ Epoch", epoch)
 		# batches_done = epoch * len(dataloader) + i
 		# if batches_done % sample_interval == 0:
