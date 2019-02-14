@@ -20,6 +20,7 @@ from convG_eeg import ConvGenerator
 from convD_eeg import ConvDiscriminator
 from load_EEGs import EEGDataset
 from remove_noise import RecurrentRemoveNoise
+from remove_noise_conv import ConvRemoveNoise
 from estimated_loader import EstimatedEEGs
 from utils import save_EEG
 
@@ -55,7 +56,8 @@ adversarial_loss = torch.nn.BCELoss()
 # Initialize generator and discriminator
 generator = ConvGenerator(img_shape, latent_dim)
 discriminator = ConvDiscriminator(img_shape)
-cleaner = RecurrentRemoveNoise(44, 50)
+# cleaner = RecurrentRemoveNoise(44, 50)
+cleaner = ConvRemoveNoise(44, 50)
 
 generate_noise = generator.generate_noise
 
