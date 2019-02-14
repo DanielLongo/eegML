@@ -19,6 +19,7 @@ sys.path.append("./discriminators")
 from convG_eeg import ConvGenerator
 from convD_eeg import ConvDiscriminator
 from load_EEGs import EEGDataset
+from remove_noise import RecurrentRemoveNoise
 from estimated_loader import EstimatedEEGs
 from utils import save_EEG
 
@@ -54,12 +55,14 @@ adversarial_loss = torch.nn.BCELoss()
 # Initialize generator and discriminator
 generator = ConvGenerator(img_shape, latent_dim)
 discriminator = ConvDiscriminator(img_shape)
+cleaner = RecurrentRemoveNoise(44, 50)
 
 generate_noise = generator.generate_noise
 
 if cuda:
 	generator.cuda()
 	discriminator.cuda()
+	cleaner.cuda()
 	adversarial_loss.cuda()
 
 # Initialize weights
@@ -67,13 +70,14 @@ if cuda:
 # discriminator.apply(weights_init_normal)
 
 # Configure data loader
-real_eegs = EEGDataset("/mnt/data1/eegdbs/SEC-0.1/stanford/", num_examples=50000, num_channels=44, batch_size=batch_size, length=1004, delay=100000)
+# real_eegs = EEGDataset("/mnt/data1/eegdbs/SEC-0.1/stanford/", num_examples=50000, num_channels=44, batch_size=batch_size, length=1004, delay=100000)
+real_eegs = EEGDataset("/mnt/data1/eegdbs/SEC-0.1/stanford/", num_examples=500, num_channels=44, batch_size=batch_size, length=1004, delay=100000)
 estimated_eegs = EstimatedEEGs(num_channels=44, length=1004)
 
 # Optimizers
 optimizer_G = torch.optim.Adam(generator.parameters(), lr=lr, betas=(b1, b2))
 optimizer_D = torch.optim.Adam(discriminator.parameters(), lr=lr, betas=(b1, b2))
-
+optimizer_C = torch.optim.Adam(cleaner.parameters())
 Tensor = torch.cuda.FloatTensor if cuda else torch.FloatTensor
 
 # ----------
@@ -134,9 +138,28 @@ for epoch in range(n_epochs):
 		d_loss.backward()
 		optimizer_D.step()
 
+		# ---------------------
+		#  Train Cleaner
+		# ---------------------
+		optimizer_C.zero_grad()
+
+		cleaned_noisy = cleaner(gen_imgs)
+		cleaned_clean = cleaner(estimated)
+		noisy_loss = torch.dist(cleaned_noisy, estimated)
+		clean_loss = torch.dist(cleaned_clean, estimated)
+
+		cleaner_loss = noisy_loss + clean_loss
+		cleaner_loss.backward()
+		optimizer_C.step()
+
+
+
 		print ("[Epoch %d/%d] [Batch %d/%d] [D loss: %f] [G loss: %f]" % (epoch, n_epochs, i, len(real_eegs),
 															d_loss.item(), g_loss.item()))
+		print("cleaner loss", clean_loss)
 	save_EEG(gen_imgs.cpu().detach().view(batch_size, 1004, 44).numpy(), 44, 200, "./generated_eegs/generated-"+ str(epoch) + "-fake-conv-add")
+	save_EEG(estimated.cpu().detach().view(batch_size, 1004, 44).numpy(), 44, 200, "./generated_eegs/generated-"+ str(epoch) + "-estimated-conv-add")
+	save_EEG(cleaned_noisy.cpu().detach().view(batch_size, 1004, 44).numpy(), 44, 200, "./generated_eegs/generated-"+ str(epoch) + "-cleaned-conv-add")
 	print("Save @ Epoch", epoch)
 		# batches_done = epoch * len(dataloader) + i
 		# if batches_done % sample_interval == 0:
