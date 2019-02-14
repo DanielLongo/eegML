@@ -70,8 +70,8 @@ if cuda:
 # discriminator.apply(weights_init_normal)
 
 # Configure data loader
-# real_eegs = EEGDataset("/mnt/data1/eegdbs/SEC-0.1/stanford/", num_examples=50000, num_channels=44, batch_size=batch_size, length=1004, delay=100000)
-real_eegs = EEGDataset("/mnt/data1/eegdbs/SEC-0.1/stanford/", num_examples=500, num_channels=44, batch_size=batch_size, length=1004, delay=100000)
+real_eegs = EEGDataset("/mnt/data1/eegdbs/SEC-0.1/stanford/", num_examples=50000, num_channels=44, batch_size=batch_size, length=1004, delay=100000)
+#real_eegs = EEGDataset("/mnt/data1/eegdbs/SEC-0.1/stanford/", num_examples=500, num_channels=44, batch_size=batch_size, length=1004, delay=100000)
 estimated_eegs = EstimatedEEGs(num_channels=44, length=1004)
 
 # Optimizers
@@ -143,12 +143,13 @@ for epoch in range(n_epochs):
 		# ---------------------
 		optimizer_C.zero_grad()
 
-		cleaned_noisy = cleaner(gen_imgs)
-		cleaned_clean = cleaner(estimated)
+		cleaned_noisy = Variable(cleaner(gen_imgs.squeeze()), requires_grad=True) * 20
+		cleaned_clean = Variable(cleaner(estimated.squeeze()), requires_grad=True) * 20
 		noisy_loss = torch.dist(cleaned_noisy, estimated)
 		clean_loss = torch.dist(cleaned_clean, estimated)
 
 		cleaner_loss = noisy_loss + clean_loss
+		print("cleaner loss", cleaner_loss)
 		cleaner_loss.backward()
 		optimizer_C.step()
 
