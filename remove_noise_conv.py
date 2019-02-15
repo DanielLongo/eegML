@@ -41,6 +41,8 @@ class ConvRemoveNoise(nn.Module):
 		)
 
 	def forward(self, x):
+		if (len(x.shape) == 3):
+			x = x.view(x.shape[0], 1, x.shape[1], x.shape[2])
 		encoded = self.conv_blocks_encode(x)
 		# print("encoded", encoded.shape)
 		decoded = self.conv_blocks_decode(encoded)
