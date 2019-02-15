@@ -145,8 +145,8 @@ for epoch in range(n_epochs):
 		# ---------------------
 		optimizer_C.zero_grad()
 
-		cleaned_noisy = Variable(cleaner(gen_imgs), requires_grad=True) * 20
-		cleaned_clean = Variable(cleaner(estimated), requires_grad=True) * 20
+		cleaned_noisy = Variable(cleaner(gen_imgs), requires_grad=True)
+		cleaned_clean = Variable(cleaner(estimated), requires_grad=True)
 		noisy_loss = torch.dist(cleaned_noisy, estimated)
 		clean_loss = torch.dist(cleaned_clean, estimated)
 
