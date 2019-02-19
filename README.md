@@ -5,6 +5,7 @@
 * Imporved singal processing: Remove Artifacts from EEGs
 
 #### TODOS: ####
+- [ ] Test g loss with c and d attributes
 - [x] Create forward model enabled generator 
 - [x] Create conditional generator (concat)
 - [ ] Create conditional generator (projection)
@@ -17,6 +18,7 @@
 - [ ] Use Siamese Network to Generate a manifold 
 - [ ] Use cGAN for data augmentation
   
+
 #### Project Plan: ####
 
 <img src="https://github.com/DanielLongo/eegML/blob/master/ProjectPlan/pg1.png"/>
