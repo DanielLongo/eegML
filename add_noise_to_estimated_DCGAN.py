@@ -1,4 +1,4 @@
-import argparse
+import csv
 import os
 import numpy as np
 import math
@@ -38,7 +38,9 @@ img_size = 32
 channels = 1
 sample_interval = 40000
 iter = 0
+costs_file = "DCGAN-s"
 print_iter = 10
+costs = []
 
 img_shape = (channels, img_size, img_size)
 
@@ -90,6 +92,7 @@ Tensor = torch.cuda.FloatTensor if cuda else torch.FloatTensor
 
 for epoch in range(n_epochs):
 	real_eegs.shuffle()
+	costs += ["Epoch:" + epoch]
 	for i, imgs in enumerate(real_eegs):
 		if (imgs.shape[0] != batch_size):
 			continue
@@ -159,10 +162,15 @@ for epoch in range(n_epochs):
 
 
 		iter += 1
+		costs += [d_loss.item(), g_loss.item(), clean_loss.item()]
 		if iter % print_iter == 0:
 			print ("[Epoch %d/%d] [Batch %d/%d] [D loss: %f] [G loss: %f]" % (epoch, n_epochs, i, len(real_eegs),
 																d_loss.item(), g_loss.item()))
 			print("cleaner loss", clean_loss)
+	with open(costs_file + ".csv"a, "w") as f:
+		writer = csv.writer(f)
+		writer.writerows(costs)
+
 	save_EEG(gen_imgs.cpu().detach().view(batch_size, 1004, 44).numpy(), 44, 200, "./generated_eegs/generated-"+ str(epoch) + "-fake-conv-add-s")
 	save_EEG(estimated.cpu().detach().view(batch_size, 1004, 44).numpy(), 44, 200, "./generated_eegs/generated-"+ str(epoch) + "-estimated-conv-add-s")
 	save_EEG(cleaned_noisy.cpu().detach().view(batch_size, 1004, 44).numpy(), 44, 200, "./generated_eegs/generated-"+ str(epoch) + "-cleaned-conv-add-s")
