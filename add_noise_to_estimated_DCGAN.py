@@ -153,7 +153,7 @@ for epoch in range(n_epochs):
 		clean_loss = torch.dist(cleaned_clean, estimated)
 
 		cleaner_loss = noisy_loss + clean_loss
-		print("cleaner loss", cleaner_loss)
+#		print("cleaner loss", cleaner_loss)
 		cleaner_loss.backward()
 		optimizer_C.step()
 
@@ -163,9 +163,9 @@ for epoch in range(n_epochs):
 			print ("[Epoch %d/%d] [Batch %d/%d] [D loss: %f] [G loss: %f]" % (epoch, n_epochs, i, len(real_eegs),
 																d_loss.item(), g_loss.item()))
 			print("cleaner loss", clean_loss)
-	save_EEG(gen_imgs.cpu().detach().view(batch_size, 1004, 44).numpy(), 44, 200, "./generated_eegs/generated-"+ str(epoch) + "-fake-conv-add")
-	save_EEG(estimated.cpu().detach().view(batch_size, 1004, 44).numpy(), 44, 200, "./generated_eegs/generated-"+ str(epoch) + "-estimated-conv-add")
-	save_EEG(cleaned_noisy.cpu().detach().view(batch_size, 1004, 44).numpy(), 44, 200, "./generated_eegs/generated-"+ str(epoch) + "-cleaned-conv-add")
+	save_EEG(gen_imgs.cpu().detach().view(batch_size, 1004, 44).numpy(), 44, 200, "./generated_eegs/generated-"+ str(epoch) + "-fake-conv-add-s")
+	save_EEG(estimated.cpu().detach().view(batch_size, 1004, 44).numpy(), 44, 200, "./generated_eegs/generated-"+ str(epoch) + "-estimated-conv-add-s")
+	save_EEG(cleaned_noisy.cpu().detach().view(batch_size, 1004, 44).numpy(), 44, 200, "./generated_eegs/generated-"+ str(epoch) + "-cleaned-conv-add-s")
 	print("Save @ Epoch", epoch)
 		# batches_done = epoch * len(dataloader) + i
 		# if batches_done % sample_interval == 0:
