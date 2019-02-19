@@ -37,6 +37,8 @@ latent_dim = 100
 img_size = 32
 channels = 1
 sample_interval = 40000
+iter = 0
+print_iter = 10
 
 img_shape = (channels, img_size, img_size)
 
@@ -156,10 +158,11 @@ for epoch in range(n_epochs):
 		optimizer_C.step()
 
 
-
-		print ("[Epoch %d/%d] [Batch %d/%d] [D loss: %f] [G loss: %f]" % (epoch, n_epochs, i, len(real_eegs),
-															d_loss.item(), g_loss.item()))
-		print("cleaner loss", clean_loss)
+		iter += 1
+		if iter % print_iter == 0:
+			print ("[Epoch %d/%d] [Batch %d/%d] [D loss: %f] [G loss: %f]" % (epoch, n_epochs, i, len(real_eegs),
+																d_loss.item(), g_loss.item()))
+			print("cleaner loss", clean_loss)
 	save_EEG(gen_imgs.cpu().detach().view(batch_size, 1004, 44).numpy(), 44, 200, "./generated_eegs/generated-"+ str(epoch) + "-fake-conv-add")
 	save_EEG(estimated.cpu().detach().view(batch_size, 1004, 44).numpy(), 44, 200, "./generated_eegs/generated-"+ str(epoch) + "-estimated-conv-add")
 	save_EEG(cleaned_noisy.cpu().detach().view(batch_size, 1004, 44).numpy(), 44, 200, "./generated_eegs/generated-"+ str(epoch) + "-cleaned-conv-add")
