@@ -76,7 +76,7 @@ if cuda:
 # discriminator.apply(weights_init_normal)
 
 # Configure data loader
-real_eegs = EEGDataset("/mnt/data1/eegdbs/SEC-0.1/stanford/", num_examples=500, num_channels=44, batch_size=batch_size, length=1004, delay=100000)
+real_eegs = EEGDataset("/mnt/data1/eegdbs/SEC-0.1/stanford/", num_examples=250, num_channels=44, batch_size=batch_size, length=1004, delay=100000)
 #real_eegs = EEGDataset("/mnt/data1/eegdbs/SEC-0.1/stanford/", num_examples=500, num_channels=44, batch_size=batch_size, length=1004, delay=100000)
 estimated_eegs = EstimatedEEGs(num_channels=44, length=1004)
 
