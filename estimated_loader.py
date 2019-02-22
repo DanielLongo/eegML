@@ -13,7 +13,8 @@ from mne.datasets import sample
 import sys, os
 
 class EstimatedEEGs(data.Dataset):
-	def __init__(self, num_channels=19, length=1000):
+	def __init__(self, num_channels=19, length=1000, batch_size=64):
+		self.batch_size = batch_size
 		self.length = length
 		self.num_nodes = num_channels
 		self.fs_gen = 250
@@ -31,8 +32,8 @@ class EstimatedEEGs(data.Dataset):
 	def __len__(self):
 		return -1 #length unlimited 
 
-	def __getitem__(self, index, batch_size=64):
-		noise = torch.randn(batch_size, self.n_dipoles, self.length) * 1e-9
+	def __getitem__(self, index):
+		noise = torch.randn(self.batch_size, self.n_dipoles, self.length) * 1e-9
 		sys.stdout = open(os.devnull, 'w') #disables console logs
 		estimated = self.apply_forward_model(noise)
 		sys.stdout = sys.__stdout__ #enables console logs
