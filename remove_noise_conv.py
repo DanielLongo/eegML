@@ -11,7 +11,7 @@ class ConvRemoveNoise(nn.Module):
 	def __init__(self, num_nodes, d, num_layers=3, bidirectional=True):
 		super(ConvRemoveNoise, self).__init__()
 		self.channels_out = 1
-		self.channels_h = 4
+		self.channels_h = 32
 
 		self.conv_blocks_decode = nn.Sequential(
 			nn.ConvTranspose2d(self.channels_h, 4, [2,3], stride=[1,1], padding=0),
@@ -45,8 +45,10 @@ class ConvRemoveNoise(nn.Module):
 			x = x.view(x.shape[0], 1, x.shape[1], x.shape[2])
 		encoded = self.conv_blocks_encode(x)
 		# print("encoded", encoded.shape)
+		# print("encoded", encoded.shape)
 		decoded = self.conv_blocks_decode(encoded)
-		return decoded
+		# print("decoded", decoded.shape)
+		return x
 
 if __name__ == "__main__":
 	g = ConvRemoveNoise(44, 50)
