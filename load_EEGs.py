@@ -149,10 +149,15 @@ def split_into_batches(x, examples_per_batch):
 def read_filenames(filenames, length, delay=10000):
 	examples_signal = []
 	examples_atribute = []
+	# delay = 100000
 	for file in filenames:
+		# print("file", file)
 		signals, atributes, specs = load_eeg_file(file, normalize=False)
-		signals = signals[:, delay:length+delay]
-		examples_signal += [signals]
+		# print("delay", delay)
+		# print("before", signals.shape)
+		signals_staggered = signals[:, delay:length+delay]
+		# print("after", signals.shape)
+		examples_signal += [signals_staggered]
 		examples_atribute += [atributes]
 		
 	return examples_signal, examples_atribute
@@ -196,7 +201,7 @@ def check_files(filenames, num_channels, length, min_length=0, max_length=1e9999
 		if file.split(".")[-1] == "eeghdf":
 			signals, _, specs = load_eeg_file(file, normalize=False)
 
-			if signals.shape[1] < length + delay:
+			if signals.shape[1] <= length + delay:
 				continue
 			if (int(specs["number_channels"]) != num_channels):
 				# print("Not correct num_channels", num_channels, specs["number_channels"])

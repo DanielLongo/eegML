@@ -4,6 +4,7 @@ from torch import nn
 import sys
 from estimated_loader import EstimatedEEGs
 from torch.autograd import Variable
+from utils import save_EEG
 
 sys.path.append("./generators/")
 sys.path.append("./discriminators/")
@@ -11,10 +12,10 @@ sys.path.append("./discriminators/")
 from convG_eeg import ConvGenerator
 from load_EEGs import EEGDataset
 cuda = True
-num_epochs = 100
+num_epochs = 500
 batch_size = 64
 num_batches = 100
-print_iter = 10
+print_iter = 100
 latent_dim = 100
 img_shape = (1, 32, 32)
 iters = 0
@@ -46,7 +47,7 @@ class ConvEncoder(nn.Module):
 
 # estimated_eegs = EstimatedEEGs(num_channels=44, length=1004, batch_size=batch_size)
 data_file = "/mnt/data1/eegdbs/all_reports_impress_blanked-2019-02-23.csv"
-real_eegs = EEGDataset("/mnt/data1/eegdbs/SEC-0.1/stanford/", csv_file=data_file, num_examples=64*4, num_channels=44, length=1004)
+real_eegs = EEGDataset("/mnt/data1/eegdbs/SEC-0.1/stanford/", csv_file=data_file, num_examples=64*8, num_channels=44, length=1004,delay=10000)
 # critereon = torch.nn.L1Loss()
 critereon = torch.nn.MSELoss()
 
@@ -59,9 +60,10 @@ net = nn.Sequential(
 
 if cuda:
 	net.cuda()
-optim = torch.optim.Adam(net.parameters(), lr=1 * 1e-2)
+optim = torch.optim.Adam(net.parameters(), lr=1 * 1e-4)
 for epoch in range(num_epochs):
 	costs_per_epoch = []
+	real_eegs.shuffle()
 	for i, eegs in enumerate(real_eegs):
 		if (eegs.shape[0] != batch_size):
 			continue
@@ -78,8 +80,10 @@ for epoch in range(num_epochs):
 		optim.step()
 		costs_per_epoch += [cost.item()]
 		if iters % print_iter == 0:
-			avg_cost_epoch = sum(costs_per_epoch)/len(costs_per_epoch)
 			print("[Iter: " + str(iters) + "] [Epoch: " + str(epoch) + "] [Avg cost in epoch %f ] [Loss: %f]" % (avg_cost_epoch, cost.item()))
+			save_EEG(eeg.cpu().detach().view(batch_size, 1004, 44).numpy(), 44, 200, "./reonconstructed_eegs/orginal-"+ str(epoch) + "-conv")
+			save_EEG(x_prime.cpu().detach().view(batch_size, 1004, 44).numpy(), 44, 200, "./reonconstructed_eegs/generated-"+ str(epoch) + "-conv")
+	avg_cost_epoch = sum(costs_per_epoch)/len(costs_per_epoch)
 
 
 
