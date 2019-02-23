@@ -9,14 +9,21 @@ import h5py
 import random
 import sklearn
 from sklearn import preprocessing
+import pandas as pd
 
 class EEGDataset(data.Dataset):
-	def __init__(self, data_dir, num_channels=19, num_examples=-1, batch_size=64, length=1000, delay=10000):
+	def __init__(self, data_dir, csv_file=None,num_channels=19, num_examples=-1, batch_size=64, length=1000, delay=10000):
+		num_examples -= 1 #for stagering
 		self.delay = delay
 		self.batch_size = batch_size
 		self.length = length
 		# self.examples_signal, self.examples_atribute = load_eeg_directory(data_dir, num_channels, min_length=100, max_length=999999, max_num=num_examples, length=length)
-		self.filenames = get_filenames(data_dir, num_channels, length, min_length=100, max_length=999999, max_num=num_examples, delay=self.delay)
+		if csv_file == None:
+			self.filenames = get_filenames(data_dir, num_channels, length, min_length=100, max_length=999999, max_num=num_examples, delay=self.delay)
+		else:
+			self.filenames = load_filenames_from_csv(csv_file)
+			random.shuffle(self.filenames)
+			self.filenames = check_files(self.filenames, num_channels, length, min_length=100, max_length=999999, max_num=num_examples, delay=self.delay)
 		self.batched_filenames = split_into_batches(self.filenames, batch_size)
 		print("Number of files found:", len(self.filenames), "Length:", length)
 		# self.batched_examples_atribute = split_into_batches(self.examples_atribute, batch_size)
@@ -177,21 +184,57 @@ def get_filenames(path, num_channels, length, min_length=0, max_length=1e9999, m
 			return filenames
 		num_files_read += 1
 
-	return filenames	
+	return filenames
 
-# dataset = Dataset("./eeg-hdfstorage/data/")
+def check_files(filenames, num_channels, length, min_length=0, max_length=1e9999, max_num=-1, sample_frequency=200, delay=10000):	
+	num_files_checked = 0
+	checked_filenames = []
+	for file in filenames:
+		if (file.split(".")[-1] != "eeghdf"):# and (file.split(".")[-1] != "fif"):
+			continue
+
+		if file.split(".")[-1] == "eeghdf":
+			signals, _, specs = load_eeg_file(file, normalize=False)
+
+			if signals.shape[1] < length + delay:
+				continue
+			if (int(specs["number_channels"]) != num_channels):
+				# print("Not correct num_channels", num_channels, specs["number_channels"])
+				continue
+			if (int(specs["sample_frequency"]) != sample_frequency):
+				# print("Not correct sample_frequency", sample_frequency, specs["sample_frequency"])
+				continue
+			num_readings = signals.shape[1]
+
+		checked_filenames += [file]
+		
+		if num_files_checked == max_num:
+			return checked_filenames
+		num_files_checked += 1
+
+	return checked_filenames
+def load_filenames_from_csv(csv_filename, filepath="/mnt/data1/eegdbs/SEC-0.1/", max_num=-1):
+	df = pd.read_csv(csv_filename)
+	filenames = []
+	file_keys = df["nk_file_reportkey"]
+	hopsital_types = df["database_source"]
+	note_types = df["note_type"]
+	for i in range(len(file_keys)):
+		if note_types[i] != "spot":
+			continue
+		if hopsital_types[i] == "STANFORD_NK":
+			filenames += [filepath + "stanford/" + file_keys[i] + "_1-1+.eeghdf"]
+		if hopsital_types[i] == "LPCH_NK":
+			filenames += [filepath + "lpch/" + file_keys[i] + "_1-1+.eeghdf"]
+		if (len(filenames) == max_num):
+			print("Number of filenames loaded from csv", len(filenames))
+			return filenames
+	print("Number of filenames loaded from csv", len(filenames))
+	return filenames
+
 if __name__ == "__main__":
-	dataset = EEGDataset("/mnt/data1/eegdbs/SEC-0.1/stanford/", num_examples=20, num_channels=44, length=100000)
-	dataset.shuffle()
-	dataset[0]
-	# dataset = EEGDataset("/Users/DanielLongo/server/mnt/home2/dlongo/eegML/generated_eegs/from_forward_model/", num_examples=10, num_channels=44)
-# filename = "./eeg-hdfstorage/data/absence_epilepsy.eeghdf"
-# # signals, atributes = load_eeg_file(filename)
-# print("atributes", atributes.shape)
-# signals, atributes = load_eeg_directory("./eeg-hdfstorage/data/", 19)
-# print(np.shape(signals))
-# print(np.shape(atributes))
-
-# print(signals.shape)
-# print(list(atributes.items()))
-# print(atributes["patient_name"])
+	csv_file = "/mnt/data1/eegdbs/all_reports_impress_blanked-2019-02-23.csv"
+	dataset = EEGDataset("/mnt/data1/eegdbs/SEC-0.1/stanford/", csv_file=csv_file, num_examples=200, num_channels=44, length=1004)
+	# dataset = EEGDataset("/mnt/data1/eegdbs/SEC-0.1/stanford/", num_examples=20, num_channels=44, length=100000)
+	# dataset.shuffle()
+	# dataset[0]

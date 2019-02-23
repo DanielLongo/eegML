@@ -50,7 +50,7 @@ class ConvGenerator(nn.Module):
 	def forward(self, z):
 		# out = self.l1(z)
 		# out = out.view(out.shape[0], 128, self.init_size, self.init_size)
-		out = self.conv_blocks(z)
+		out = self.conv_blocks(z) * 20
 		return out
 
 	def generate_noise(self, batch_size):

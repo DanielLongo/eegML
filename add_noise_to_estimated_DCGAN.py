@@ -28,7 +28,7 @@ os.makedirs('images', exist_ok=True)
 
 n_epochs = 200
 batch_size = 64
-lr = 0.00005
+# lr = 0.00005
 lr = .0000005
 b1 = .5
 b2 = .999
@@ -38,7 +38,8 @@ img_size = 32
 channels = 1
 sample_interval = 40000
 iter = 0
-costs_file = "DCGAN-s"
+data_file = "/mnt/data1/eegdbs/all_reports_impress_blanked-2019-02-23.csv"
+costs_file = "DCGAN-ss"
 print_iter = 10
 costs = []
 
@@ -76,7 +77,8 @@ if cuda:
 # discriminator.apply(weights_init_normal)
 
 # Configure data loader
-real_eegs = EEGDataset("/mnt/data1/eegdbs/SEC-0.1/stanford/", num_examples=250, num_channels=44, batch_size=batch_size, length=1004, delay=100000)
+# real_eegs = EEGDataset("/mnt/data1/eegdbs/SEC-0.1/stanford/", num_examples=250, num_channels=44, batch_size=batch_size, length=1004, delay=100000)
+real_eegs = EEGDataset("/mnt/data1/eegdbs/SEC-0.1/stanford/", csv_file=data_file, num_examples=200, num_channels=44, length=1004)
 #real_eegs = EEGDataset("/mnt/data1/eegdbs/SEC-0.1/stanford/", num_examples=500, num_channels=44, batch_size=batch_size, length=1004, delay=100000)
 estimated_eegs = EstimatedEEGs(num_channels=44, length=1004)
 
@@ -92,7 +94,7 @@ Tensor = torch.cuda.FloatTensor if cuda else torch.FloatTensor
 
 for epoch in range(n_epochs):
 	real_eegs.shuffle()
-	costs += ["Epoch:" + epoch]
+	costs += [["Epoch:" + str(epoch)]]
 	for i, imgs in enumerate(real_eegs):
 		if (imgs.shape[0] != batch_size):
 			continue
@@ -162,18 +164,18 @@ for epoch in range(n_epochs):
 
 
 		iter += 1
-		costs += [d_loss.item(), g_loss.item(), clean_loss.item()]
+		costs += [[d_loss.item(), g_loss.item(), clean_loss.item()]]
 		if iter % print_iter == 0:
 			print ("[Epoch %d/%d] [Batch %d/%d] [D loss: %f] [G loss: %f]" % (epoch, n_epochs, i, len(real_eegs),
 																d_loss.item(), g_loss.item()))
 			print("cleaner loss", clean_loss)
-	with open(costs_file + ".csv"a, "w") as f:
+	with open(costs_file + ".csv", "w") as f:
 		writer = csv.writer(f)
 		writer.writerows(costs)
 
-	save_EEG(gen_imgs.cpu().detach().view(batch_size, 1004, 44).numpy(), 44, 200, "./generated_eegs/generated-"+ str(epoch) + "-fake-conv-add-s")
-	save_EEG(estimated.cpu().detach().view(batch_size, 1004, 44).numpy(), 44, 200, "./generated_eegs/generated-"+ str(epoch) + "-estimated-conv-add-s")
-	save_EEG(cleaned_noisy.cpu().detach().view(batch_size, 1004, 44).numpy(), 44, 200, "./generated_eegs/generated-"+ str(epoch) + "-cleaned-conv-add-s")
+	save_EEG(gen_imgs.cpu().detach().view(batch_size, 1004, 44).numpy(), 44, 200, "./generated_eegs/generated-"+ str(epoch) + "-fake-conv-add-ss")
+	save_EEG(estimated.cpu().detach().view(batch_size, 1004, 44).numpy(), 44, 200, "./generated_eegs/generated-"+ str(epoch) + "-estimated-conv-add-ss")
+	save_EEG(cleaned_noisy.cpu().detach().view(batch_size, 1004, 44).numpy(), 44, 200, "./generated_eegs/generated-"+ str(epoch) + "-cleaned-conv-add-ss")
 	print("Save @ Epoch", epoch)
 		# batches_done = epoch * len(dataloader) + i
 		# if batches_done % sample_interval == 0:
