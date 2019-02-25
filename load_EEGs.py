@@ -10,6 +10,7 @@ import random
 import sklearn
 from sklearn import preprocessing
 import pandas as pd
+from utils import save_EEG
 
 class EEGDataset(data.Dataset):
 	def __init__(self, data_dir, csv_file=None,num_channels=19, num_examples=-1, batch_size=64, length=1000, delay=10000):
@@ -240,6 +241,9 @@ def load_filenames_from_csv(csv_filename, filepath="/mnt/data1/eegdbs/SEC-0.1/",
 if __name__ == "__main__":
 	csv_file = "/mnt/data1/eegdbs/all_reports_impress_blanked-2019-02-23.csv"
 	dataset = EEGDataset("/mnt/data1/eegdbs/SEC-0.1/stanford/", csv_file=csv_file, num_examples=200, num_channels=44, length=1004)
+	# csv_file = "/Users/DanielLongo/server/mnt/data1/eegdbs/all_reports_impress_blanked-2019-02-23.csv"
+	# dataset = EEGDataset("./eeg-hdfstorage", csv_file=csv_file, num_examples=64, num_channels=44, length=1004)
+	save_EEG(dataset[0], None, None, "save_dataloader")
 	# dataset = EEGDataset("/mnt/data1/eegdbs/SEC-0.1/stanford/", num_examples=20, num_channels=44, length=100000)
 	# dataset.shuffle()
 	# dataset[0]
