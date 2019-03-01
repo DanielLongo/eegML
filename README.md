@@ -12,7 +12,7 @@
 - [x] Enable larger continuous EEG generation (Add S<sub>t</sub> as input)
 - [x] Create convolutional varient
 - [x] Create remove noise network (conv and recurrent) 
-- [ ] Enable various size of real data size
+- [ ] Test different intermediate representations
 - [ ] Get the entire architecture to compile 
 - [ ] Train Siamese Network 
 - [ ] Use Siamese Network to Generate a manifold 
