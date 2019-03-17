@@ -1,0 +1,3 @@
+[submodule "EEG-GAN"]
+	path = EEG-GAN
+	url = https://github.com/DanielLongo/EEG-GAN
