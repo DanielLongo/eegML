@@ -5,6 +5,11 @@
 * Imporved singal processing: Remove Artifacts from EEGs
 
 #### TODOS: ####
+- [x] implement progressive gan
+- [x] create generations with progressive gan
+- [ ] add physics models to progressive gan
+
+--------------------------
 - [ ] Test g loss with c and d attributes
 - [x] Create forward model enabled generator 
 - [x] Create conditional generator (concat)
