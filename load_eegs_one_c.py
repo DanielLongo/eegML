@@ -48,15 +48,26 @@ class EEGDataset(data.Dataset):
 		batch_filenames = self.batched_filenames[index]
 		signals, attributes = read_filenames(batch_filenames, self.length, delay=self.delay)
 		signals = np.asarray(signals)
-		print("signals", signals.shape)
+		# print("signals", signals.shape)		
 		signals = signals[:, :self.valid_unitl, :] #remove poor channels
-		print("signals", signals.shape)
-		signals = (signals.flatten()).reshape(-1, self.length, 1)[:self.batch_size]
-		print("signals", signals.shape)
-		sample = torch.from_numpy(np.asarray(signals))
-		sample = sample.view(-1, sample.shape[2], sample.shape[1]).type('torch.FloatTensor')
+		single_channels = []
+		# print("signals", signals.shape)
+		for example in signals:
+			for recording in example:
+				single_channels += [recording]
+		single_channels = single_channels
+		sample = split_into_batches(single_channels, self.batch_size)
+		# print("sample", np.shape(sample[0]))
 
-		return sample
+
+
+			# batch.flatten().reshape(-1, self.length)
+		# signals = (signals.flatten()).reshape(-1, self.length, 1)[:self.batch_size]
+		# print("signals", signals.shape)
+		# sample = torch.from_numpy(np.asarray(signals))
+		# sample = sample.view(-1, sample.shape[2], sample.shape[1]).type('torch.FloatTensor')
+
+		return torch.from_numpy(np.asarray(sample[0]).reshape(self.batch_size, self.length, 1)).type('torch.FloatTensor')
 
 	def shuffle(self):
 		#old bad method
@@ -254,6 +265,7 @@ if __name__ == "__main__":
 	dataset = EEGDataset("/mnt/data1/eegdbs/SEC-0.1/stanford/",  num_examples=200, num_channels=44, length=1004)
 	# csv_file = "/Users/DanielLongo/server/mnt/data1/eegdbs/all_reports_impress_blanked-2019-02-23.csv"
 	# dataset = EEGDataset("./eeg-hdfstorage", csv_file=csv_file, num_examples=64, num_channels=44, length=1004)
+	print("finna'l",dataset[0].shape)
 	save_EEG(dataset[0], None, None, "save_dataloader")
 	# dataset = EEGDataset("/mnt/data1/eegdbs/SEC-0.1/stanford/", num_examples=20, num_channels=44, length=100000)
 	# dataset.shuffle()
