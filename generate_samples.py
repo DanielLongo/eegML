@@ -6,11 +6,12 @@ sys.path.append("./ProgressiveGAN/EEG-GAN/")
 import eeggan
 from eeggan.examples.conv_lin.model import Generator, Discriminator
 
-def load_model(d_filename, g_filename, n_z=200):
+def load_model(d_filename, g_filename, n_z=200, map_location='gpu'):
+	print("map location", map_location)
 	d = Discriminator(1)
 	g = Generator(1, n_z)
-	d.load_state_dict(torch.load(d_filename))
-	g.load_state_dict(torch.load(g_filename))
+	d.load_state_dict(torch.load(d_filename, map_location=map_location))
+	g.load_state_dict(torch.load(g_filename, map_location=map_location))
 	return d, g
 
 def generate_noise(batch_size, task_index=0, n_z=200):
@@ -26,7 +27,11 @@ def save_reading(readings, file):
 def generate_readings(suffix, num_examples, filepath="./ProgressiveGAN/EEG-GAN/eeggan/examples/conv_lin/", prefix_d="discriminator", prefix_g="generator", block=5):
 	d_filename = filepath + prefix_d + suffix + ".pt"
 	g_filename = filepath + prefix_g + suffix + ".pt"
-	_, g = load_model(d_filename, g_filename)
+	if torch.cuda.is_available():
+		_, g = load_model(d_filename, g_filename)
+	else:
+		_, g = load_model(d_filename, g_filename, map_location = 'cpu')
+	print("d_filename", d_filename)
 	g.model.cur_block = block
 	z = generate_noise(num_examples)
 	samples = np.squeeze(g(z).detach().numpy())
