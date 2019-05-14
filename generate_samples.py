@@ -24,8 +24,8 @@ def save_reading(readings, file):
 	np.save(file, readings)
 
 def generate_readings(suffix, num_examples, filepath="./ProgressiveGAN/EEG-GAN/eeggan/examples/conv_lin/", prefix_d="discriminator", prefix_g="generator", block=5):
-	d_filename = filepath + prefix_d + ".pt"
-	g_filename = filepath + prefix_g + ".pt"
+	d_filename = filepath + prefix_d + suffix + ".pt"
+	g_filename = filepath + prefix_g + suffix + ".pt"
 	_, g = load_model(d_filename, g_filename)
 	g.model.cur_block = block
 	z = generate_noise(num_examples)
