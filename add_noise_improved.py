@@ -196,5 +196,6 @@ def main():
 		print("Epoch", iteration)
 		print("G_cost" , loss_G)
 		print("D_cost", loss_D)
+
 if __name__ == "__main__":
 	main()
