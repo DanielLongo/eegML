@@ -66,8 +66,12 @@ class EEGDataset(data.Dataset):
 		# print("signals", signals.shape)
 		# sample = torch.from_numpy(np.asarray(signals))
 		# sample = sample.view(-1, sample.shape[2], sample.shape[1]).type('torch.FloatTensor')
-
-		return torch.from_numpy(np.asarray(sample[0]).reshape(self.batch_size, self.length, 1)).type('torch.FloatTensor')
+		try:
+			out = torch.from_numpy(np.asarray(sample[0]).reshape(self.batch_size, self.length, 1)).type('torch.FloatTensor')
+		except ValueError:
+			print("shape error in singe channel data loader")
+			return self.__getitem__(index)
+		return out
 
 	def shuffle(self):
 		#old bad method

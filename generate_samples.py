@@ -15,8 +15,10 @@ def load_model(d_filename, g_filename, n_z=200, map_location='gpu'):
 	return d, g
 
 def generate_noise(batch_size, task_index=0, n_z=200):
-	rng = np.random.RandomState(task_index)
+	# rng = np.random.RandomState(task_index)
+	rng = np.random.RandomState(None)
 	z_vars = rng.normal(0, 1, size=(batch_size, n_z)).astype(np.float32)
+	print("z_vars_sum", np.sum(z_vars))
 	z_vars = torch.autograd.Variable(torch.from_numpy(z_vars), requires_grad=False)
 	return z_vars
 
@@ -44,6 +46,6 @@ if __name__ == "__main__":
 	# x = generate_noise(64)
 	# readings = np.squeeze(g(x).detach().numpy())
 	# print("readings:", readings.shape)
-	samples = generate_readings("", 20)
+	samples = generate_readings("-s", 20)
 	print("samples shape", samples.shape)
 
