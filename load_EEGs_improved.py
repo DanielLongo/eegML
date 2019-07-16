@@ -25,8 +25,11 @@ class EEGDataset(data.Dataset):
 			self.filenames = load_filenames_from_csv(csv_file)
 			random.shuffle(self.filenames)
 			self.filenames = check_files(self.filenames, num_channels, length, min_length=100, max_length=999999, max_num=num_examples, delay=self.delay)
-		self.batched_filenames = split_into_batches(self.filenames, batch_size)
 		print("Number of files found:", len(self.filenames), "Length:", length)
+		self.preloaded_examples = []
+		self.load_examples()
+		self.preloaded_batches = []
+
 		# self.batched_examples_atribute = split_into_batches(self.examples_atribute, batch_size)
 		# self.batched_examples_signal = split_into_batches(self.examples_signal, batch_size)
 
@@ -35,30 +38,25 @@ class EEGDataset(data.Dataset):
 		return len(self.batched_filenames)
 
 	def __getitem__(self, index):
-		#old bad method
-		# batch = self.batched_examples_signal[index]
-		# sample = torch.from_numpy(np.asarray(batch))
-		# sample = sample.view(-1, sample.shape[2], sample.shape[1]).type('torch.FloatTensor')
-
-		#new version (doesn't kill vRAM)
-		batch_filenames = self.batched_filenames[index]
-		signals, attributes = read_filenames(batch_filenames, self.length, delay=self.delay)
+		signals = self.preloaded_batches[index]
 		sample = torch.from_numpy(np.asarray(signals))
 		sample = sample.view(-1, sample.shape[2], sample.shape[1]).type('torch.FloatTensor')
-
 		return sample
 
-	def shuffle(self):
-		#old bad method
-		# examples = list(zip(self.examples_signal, self.examples_atribute))
-		# random.shuffle(examples)
-		# self.examples_signal, self.examples_atribute = zip(*examples)
-		# self.batched_examples_signal = split_into_batches(self.examples_signal, self.batch_size)
-		# self.batched_examples_atribute = split_into_batches(self.examples_atribute, self.batch_size)
+	def load_examples(self):
+		examples = []
+		for filename in self.filenames:
+			examples += [read_filenames([filename], self.length)]
+		self.preloaded_examples = examples
 
-		#new better method
-		random.shuffle(self.filenames)
-		self.batched_filenames = split_into_batches(self.filenames, self.batch_size)
+	def create_batches(self):
+		self.preloaded_batches = split_into_batches(self.preloaded_examples, self.batch_size)
+
+	def shuffle(self):
+		random.shuffle(self.preloaded_examples)
+		self.create_batches()
+
+
 
 
 def load_eeg_file(filename, normalize=False):
