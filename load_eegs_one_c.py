@@ -70,7 +70,7 @@ class EEGDataset(data.Dataset):
 			out = torch.from_numpy(np.asarray(sample[0]).reshape(self.batch_size, self.length, 1)).type('torch.FloatTensor')
 		except ValueError:
 			print("shape error in singe channel data loader")
-			return self.__getitem__(index)
+			return self.__getitem__(index + 1) # TODO: create better fix
 		return out
 
 	def shuffle(self):
@@ -269,7 +269,7 @@ if __name__ == "__main__":
 	dataset = EEGDataset("/mnt/data1/eegdbs/SEC-0.1/stanford/",  num_examples=200, num_channels=44, length=1004)
 	# csv_file = "/Users/DanielLongo/server/mnt/data1/eegdbs/all_reports_impress_blanked-2019-02-23.csv"
 	# dataset = EEGDataset("./eeg-hdfstorage", csv_file=csv_file, num_examples=64, num_channels=44, length=1004)
-	print("finna'l",dataset[0].shape)
+	print("finna'l",dataset[201].shape)
 	save_EEG(dataset[0], None, None, "save_dataloader")
 	# dataset = EEGDataset("/mnt/data1/eegdbs/SEC-0.1/stanford/", num_examples=20, num_channels=44, length=100000)
 	# dataset.shuffle()

@@ -15,48 +15,77 @@ from utils import save_EEG
 
 class EEGDataset(data.Dataset):
 	def __init__(self, data_dir, csv_file=None, num_channels=19, num_examples=-1, batch_size=64, length=1000, delay=10000):
-		num_examples -= 1 #for stagering
+		# num_examples -= 1 #for stagering
 		self.delay = delay
 		self.batch_size = batch_size
 		self.length = length
 		self.valid_unitl = 20 #channel until which to take recordings from
 		self.recordings_per_batch = math.ceil(batch_size / self.valid_unitl)
-
+		self.num_examples = num_examples
 		# self.examples_signal, self.examples_atribute = load_eeg_directory(data_dir, num_channels, min_length=100, max_length=999999, max_num=num_examples, length=length)
+		print(num_examples)
+		num_files_needed = math.ceil(num_examples / self.valid_unitl)
+		print("num_files_needed", num_files_needed)
 		if csv_file == None:
-			self.filenames = get_filenames(data_dir, num_channels, length, min_length=100, max_length=999999, max_num=num_examples, delay=self.delay)
+			self.filenames = get_filenames(data_dir, num_channels, length, min_length=100, max_length=999999, max_num=num_files_needed, delay=self.delay)
 		else:
 			self.filenames = load_filenames_from_csv(csv_file)
 			random.shuffle(self.filenames)
-			self.filenames = check_files(self.filenames, num_channels, length, min_length=100, max_length=999999, max_num=num_examples, delay=self.delay)
+			self.filenames = check_files(self.filenames, num_channels, length, min_length=100, max_length=999999, max_num=num_files_needed, delay=self.delay)
 		self.batched_filenames = split_into_batches(self.filenames, self.recordings_per_batch)
 		print("Number of files found:", len(self.filenames), "Length:", length)
-		self.preloaded_data = []
+		self.preloaded_examples = []
+		self.preloaded_batches = []
 		self.load_data()
 		# self.batched_examples_atribute = split_into_batches(self.examples_atribute, batch_size)
 		# self.batched_examples_signal = split_into_batches(self.examples_signal, batch_size)
 
+	def create_batches(self):
+		self.preloaded_batches = split_into_batches(self.preloaded_examples, self.batch_size)
+
 	def load_data(self):
-		out = []
-		for filenames in self.batched_filenames:
-			out += [self.load_file_data(filenames)]
-		self.preloaded_data = out
+		examples = []
+		for filename in self.filenames:
+			examples += self.load_examples_from_file(filename)
+		random.shuffle(examples)
+		examples = examples[:self.num_examples]
+		self.preloaded_examples = examples
+			# self.load_file_data()
+		# batched_data = []
+		# print(len(self.batched_filenames), len(self.batched_filenames[0]))
+		# for filenames in self.batched_filenames:
+		# 	batched_data += [self.load_file_data(filenames)]
+		# self.preloaded_data = batched_data
+
+	def load_examples_from_file(self, filename):
+		signals, attributes = read_filenames([filename], self.length, delay=self.delay)
+		signals = np.asarray(signals)
+		signals = signals[:, :self.valid_unitl, :] # remove poor channels
+		single_channels = []
+		for example in signals:
+			for recording in example:
+				single_channels += [recording]
+		return single_channels
 
 	def __len__(self):
 		# return len(self.batched_examples_atribute)
 		return len(self.batched_filenames)
 
 	def __getitem__(self, index):
-		if self.preloaded_data[index] is None:
+		if self.preloaded_batches[index] is None:
 			# TODO: get better soltion
+			print("preloaded batches is None")
 			return self.__getitem__(index + 1)
-		return self.preloaded_data[index]
+		out = torch.FloatTensor(self.preloaded_batches[index])
+		out = out.view(-1, self.length, 1)
+		return out
 
-	def load_file_data(self, batch_filenames):
+	def load_file_data(self, batch_filenames): # loads into batches
+		print("batch filenames", batch_filenames)
 		#old bad method
 		signals, attributes = read_filenames(batch_filenames, self.length, delay=self.delay)
 		signals = np.asarray(signals)
-		signals = signals[:, :self.valid_unitl, :] #remove poor channels
+		signals = signals[:, :self.valid_unitl, :] # remove poor channels
 		single_channels = []
 		for example in signals:
 			for recording in example:
@@ -70,6 +99,16 @@ class EEGDataset(data.Dataset):
 		return out
 
 	def shuffle(self):
+		random.shuffle(self.preloaded_examples)
+		self.create_batches()
+		# print("Before preloaded data length and shape", len(self.preloaded_data), self.preloaded_data[0].shape)
+		# asarray = np.asarray(self.preloaded_data)
+		# print("as arrray shape", asarray.shape)
+		# asarray = asarray.reshape(-1, self.length, 1)
+		# np.random.shuffle(asarray)
+		# self.preloaded_data = split_into_batches(asarray.tolist(), self.examples_per_batch)
+		# print("After preloaded data length and shape", len(self.preloaded_data), self.preloaded_data[0].shape)
+
 		#old bad method
 		# examples = list(zip(self.examples_signal, self.examples_atribute))
 		# random.shuffle(examples)
@@ -78,7 +117,6 @@ class EEGDataset(data.Dataset):
 		# self.batched_examples_atribute = split_into_batches(self.examples_atribute, self.batch_size)
 
 		#new better method
-		print("preloaded datashape", self.preloaded_data.shape)
 		# random.shuffle(self.s)
 		# self.batched_filenames = split_into_batches(self.filenames, self.recordings_per_batch)
 
@@ -263,9 +301,14 @@ def load_filenames_from_csv(csv_filename, filepath="/mnt/data1/eegdbs/SEC-0.1/",
 if __name__ == "__main__":
 	# csv_file = "/mnt/data1/eegdbs/all_reports_impress_blanked-2019-02-23.csv"
 	# dataset = EEGDataset("/mnt/data1/eegdbs/SEC-0.1/stanford/", csv_file=csv_file, num_examples=200, num_channels=44, length=1004)
-	dataset = EEGDataset("/mnt/data1/eegdbs/SEC-0.1/stanford/",  num_examples=200, num_channels=44, length=1004)
+	# dataset = EEGDataset("/mnt/data1/eegdbs/SEC-0.1/stanford/",  num_examples=438, num_channels=44, length=768)
+	dataset = EEGDataset("/mnt/data1/eegdbs/SEC-0.1/stanford/",  num_examples=438, batch_size=64, num_channels=44, length=768)
+	print("shuffling")
 	dataset.shuffle()
+	print("shuffling finsihed")
+	print("loading")
 	print("sample shape", dataset[0].shape)
+	print("loading finsihed")
 	# csv_file = "/Users/DanielLongo/server/mnt/data1/eegdbs/all_reports_impress_blanked-2019-02-23.csv"
 	# dataset = EEGDataset("./eeg-hdfstorage", csv_file=csv_file, num_examples=64, num_channels=44, length=1004)
 	# print("finna'l",dataset[0].shape)
