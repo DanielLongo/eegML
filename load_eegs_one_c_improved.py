@@ -101,24 +101,6 @@ class EEGDataset(data.Dataset):
 	def shuffle(self):
 		random.shuffle(self.preloaded_examples)
 		self.create_batches()
-		# print("Before preloaded data length and shape", len(self.preloaded_data), self.preloaded_data[0].shape)
-		# asarray = np.asarray(self.preloaded_data)
-		# print("as arrray shape", asarray.shape)
-		# asarray = asarray.reshape(-1, self.length, 1)
-		# np.random.shuffle(asarray)
-		# self.preloaded_data = split_into_batches(asarray.tolist(), self.examples_per_batch)
-		# print("After preloaded data length and shape", len(self.preloaded_data), self.preloaded_data[0].shape)
-
-		#old bad method
-		# examples = list(zip(self.examples_signal, self.examples_atribute))
-		# random.shuffle(examples)
-		# self.examples_signal, self.examples_atribute = zip(*examples)
-		# self.batched_examples_signal = split_into_batches(self.examples_signal, self.batch_size)
-		# self.batched_examples_atribute = split_into_batches(self.examples_atribute, self.batch_size)
-
-		#new better method
-		# random.shuffle(self.s)
-		# self.batched_filenames = split_into_batches(self.filenames, self.recordings_per_batch)
 
 
 def load_eeg_file(filename, normalize=False):
