@@ -10,10 +10,10 @@ sys.path.append("./generators/")
 sys.path.append("./discriminators/")
 
 from convG_eeg import ConvGenerator
-from load_EEGs import EEGDataset
+from load_EEGs_improved import EEGDataset
 
 cuda = True
-num_epochs = 500
+num_epochs = 2000
 batch_size = 64
 num_batches = 100
 print_iter = 100
@@ -48,9 +48,11 @@ class ConvEncoder(nn.Module):
 
 
 # estimated_eegs = EstimatedEEGs(num_channels=44, length=1004, batch_size=batch_size)
-data_file = "/mnt/data1/eegdbs/all_reports_impress_blanked-2019-02-23.csv"
-real_eegs = EEGDataset("/mnt/data1/eegdbs/SEC-0.1/stanford/", csv_file=data_file, num_examples=64 * 8, num_channels=44,
+# data_file = "/mnt/data1/eegdbs/all_reports_impress_blanked-2019-02-23.csv"
+data_file = None
+real_eegs = EEGDataset("/mnt/data1/eegdbs/SEC-0.1/stanford/", csv_file=data_file, num_examples=64 * 4, num_channels=44,
                        length=1004, delay=10000)
+print("loaded")
 # critereon = torch.nn.L1Loss()
 critereon = torch.nn.MSELoss()
 
@@ -63,11 +65,12 @@ net = nn.Sequential(
 
 if cuda:
     net.cuda()
-optim = torch.optim.Adam(net.parameters(), lr=1 * 1e-4)
+optim = torch.optim.Adam(net.parameters(), lr=1 * 1e-3)
 
 
 def main():
     iters = 0
+    costs = []
     for epoch in range(num_epochs):
         costs_per_epoch = []
         real_eegs.shuffle()
@@ -90,10 +93,12 @@ def main():
                 print("[Iter: " + str(iters) + "] [Epoch: " + str(epoch) + "] [Avg cost in epoch %f ] [Loss: %f]" % (
                 avg_cost_epoch, cost.item()))
                 save_EEG(eeg.cpu().detach().view(batch_size, 1004, 44).numpy(), 44, 200,
-                         "./reonconstructed_eegs/orginal-" + str(epoch) + "-conv")
+                         "./reonconstructed_eegs/B-orginal-" + str(epoch))
                 save_EEG(x_prime.cpu().detach().view(batch_size, 1004, 44).numpy(), 44, 200,
-                         "./reonconstructed_eegs/generated-" + str(epoch) + "-conv")
+                         "./reonconstructed_eegs/B-generated-" + str(epoch))
         avg_cost_epoch = sum(costs_per_epoch) / len(costs_per_epoch)
+        costs += [avg_cost_epoch]
+        np.save("./reonconstructed_eegs/convVAE-lr1e-3-N256-C44-L1004-B", np.asarray(costs))
 
 
 if __name__ == "__main__":
