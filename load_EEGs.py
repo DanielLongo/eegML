@@ -242,6 +242,7 @@ if __name__ == "__main__":
 	# csv_file = "/mnt/data1/eegdbs/all_reports_impress_blanked-2019-02-23.csv"
 	csv_file = None
 	dataset = EEGDataset("/mnt/data1/eegdbs/SEC-0.1/stanford/", csv_file=csv_file, num_examples=200, num_channels=44, length=1004)
+	print(dataset[0].shape)
 	# csv_file = "/Users/DanielLongo/server/mnt/data1/eegdbs/all_reports_impress_blanked-2019-02-23.csv"
 	# dataset = EEGDataset("./eeg-hdfstorage", csv_file=csv_file, num_examples=64, num_channels=44, length=1004)
 	# save_EEG(dataset[0], None, None, "save_dataloader")

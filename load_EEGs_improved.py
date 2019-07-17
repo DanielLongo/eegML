@@ -18,6 +18,7 @@ class EEGDataset(data.Dataset):
 		self.delay = delay
 		self.batch_size = batch_size
 		self.length = length
+		self.num_channels = num_channels
 		# self.examples_signal, self.examples_atribute = load_eeg_directory(data_dir, num_channels, min_length=100, max_length=999999, max_num=num_examples, length=length)
 		if csv_file == None:
 			self.filenames = get_filenames(data_dir, num_channels, length, min_length=100, max_length=999999, max_num=num_examples, delay=self.delay)
@@ -29,7 +30,7 @@ class EEGDataset(data.Dataset):
 		self.preloaded_examples = []
 		self.load_examples()
 		self.preloaded_batches = []
-
+		self.create_batches()
 		# self.batched_examples_atribute = split_into_batches(self.examples_atribute, batch_size)
 		# self.batched_examples_signal = split_into_batches(self.examples_signal, batch_size)
 
@@ -40,13 +41,13 @@ class EEGDataset(data.Dataset):
 	def __getitem__(self, index):
 		signals = self.preloaded_batches[index]
 		sample = torch.from_numpy(np.asarray(signals))
-		sample = sample.view(-1, sample.shape[2], sample.shape[1]).type('torch.FloatTensor')
+		sample = sample.view(-1, self.length, self.num_channels).type('torch.FloatTensor')
 		return sample
 
 	def load_examples(self):
 		examples = []
 		for filename in self.filenames:
-			examples += [read_filenames([filename], self.length)]
+			examples += [read_filenames([filename], self.length)[0]]
 		self.preloaded_examples = examples
 
 	def create_batches(self):
@@ -239,8 +240,13 @@ def load_filenames_from_csv(csv_filename, filepath="/mnt/data1/eegdbs/SEC-0.1/",
 if __name__ == "__main__":
 	# csv_file = "/mnt/data1/eegdbs/all_reports_impress_blanked-2019-02-23.csv"
 	csv_file = None
-	dataset = EEGDataset("/mnt/data1/eegdbs/SEC-0.1/stanford/", csv_file=csv_file, num_examples=200, num_channels=44, length=1004)
-	# csv_file = "/Users/DanielLongo/server/mnt/data1/eegdbs/all_reports_impress_blanked-2019-02-23.csv"
+	dataset = EEGDataset("/mnt/data1/eegdbs/SEC-0.1/stanford/", csv_file=csv_file, num_examples=438, batch_size=8, num_channels=44, length=1004)
+	start = time.time()
+	print("a")
+	dataset.shuffle()
+	print("shape of sample", dataset[0].shape)	
+	print(time.time() - start)
+# csv_file = "/Users/DanielLongo/server/mnt/data1/eegdbs/all_reports_impress_blanked-2019-02-23.csv"
 	# dataset = EEGDataset("./eeg-hdfstorage", csv_file=csv_file, num_examples=64, num_channels=44, length=1004)
 	# save_EEG(dataset[0], None, None, "save_dataloader")
 	# dataset = EEGDataset("/mnt/data1/eegdbs/SEC-0.1/stanford/", num_examples=20, num_channels=44, length=100000)
