@@ -1,6 +1,9 @@
 import numpy as np
+import mne
+import torch
 from torch.utils import data
 from mne.datasets import sample
+import random
 
 
 class ForwardModelDataset(data.Dataset):
@@ -27,7 +30,14 @@ class ForwardModelDataset(data.Dataset):
         assert (end < len(self.preloaded_examples_eegs))
         EEG = self.preloaded_examples_eegs[start: end]
         sample = torch.from_numpy(np.asarray(EEG)).type('torch.FloatTensor')
-        print("sample shape", sample.shape)
+        return sample
+
+    def getSources(self, index):
+        start = self.batch_size * index
+        end = start + self.batch_size
+        assert (end < len(self.preloaded_examples_source))
+        source = self.preloaded_examples_source[start: end]
+        sample = torch.from_numpy(np.asarray(source)).type('torch.FloatTensor')
         return sample
 
     def load_forward_model(self):
@@ -43,18 +53,23 @@ class ForwardModelDataset(data.Dataset):
 
     def load_examples(self):
         for i in range(self.num_examples):
-            self.preloaded_examples_eegs += [np.random.randn(self.n_dipoles, self.length)]
+            self.preloaded_examples_source += [np.random.randn(self.n_dipoles, self.length) * 1e-9]
             self.preloaded_examples_eegs += [self.generate_eeg(i)]
 
     def generate_eeg(self, source_index):
-        stc = mne.SourceEstimate(self.preloaded_examples_eegs[source_index], self.vertices, tmin=0., tstep=1 / 250)
+        stc = mne.SourceEstimate(self.preloaded_examples_source[source_index], self.vertices, tmin=0., tstep=1 / 250)
         leadfield = mne.apply_forward(self.fwd_fixed, stc, self.info).data / 1e-9
-        return leadfield
+        return leadfield[:self.num_channels]
 
     def shuffle(self):
-        random.shuffle(self.preloaded_examples)
-        self.create_batches()
+        combined = list(zip(self.preloaded_examples_source, self.preloaded_examples_eegs))
+        random.shuffle(combined)
+        self.preloaded_examples_source, self.preloaded_examples_eegs = zip(*combined)
 
 if __name__ == "__main__":
-    FMD = ForwardModelDataset(20, batch_size=4)
-    FMD.getEEG(2)
+    FMD = ForwardModelDataset(384, batch_size=64)
+    print("EEG Shape", FMD.getEEGs(1).shape, torch.sum(FMD.getEEGs(1)))
+    print("Source shape", FMD.getSources(1).shape, torch.sum(FMD.getSources(1)))
+    FMD.shuffle()
+    print("EEG Shape", FMD.getEEGs(1).shape, torch.sum(FMD.getEEGs(1)))
+    print("Source shape", FMD.getSources(1).shape, torch.sum(FMD.getSources(1)))
