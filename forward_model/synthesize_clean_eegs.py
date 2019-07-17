@@ -32,7 +32,7 @@ def generate_data(num_examples, data_dir, fwd_fixed, n_sensors=60, fs_gen=200, n
 		filename = data_dir + "/"  + prefix + str(i) + "raw.fif"
 		stc = mne.SourceEstimate(z, vertices, tmin=0., tstep=time_step)
 		leadfield = mne.apply_forward(fwd_fixed, stc, info).data
-		save_data(leadfield, filename, channel_names, frequency)
+		# save_data(leadfield, filename, channel_names, frequency)
 		print("i: " + str(i) + " - " + str(int((i+1) * 100/num_examples)) + "%")
 	print("finished")
 	
