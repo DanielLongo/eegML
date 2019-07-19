@@ -18,14 +18,15 @@ class EEGDataset(data.Dataset):
 		self.delay = delay
 		self.batch_size = batch_size
 		self.length = length
+		self.load_length = length + 300
 		self.num_channels = num_channels
 		# self.examples_signal, self.examples_atribute = load_eeg_directory(data_dir, num_channels, min_length=100, max_length=999999, max_num=num_examples, length=length)
 		if csv_file == None:
-			self.filenames = get_filenames(data_dir, num_channels, length, min_length=100, max_length=999999, max_num=num_examples, delay=self.delay)
+			self.filenames = get_filenames(data_dir, num_channels, self.load_length, min_length=100, max_length=999999, max_num=num_examples, delay=self.delay)
 		else:
 			self.filenames = load_filenames_from_csv(csv_file)
 			random.shuffle(self.filenames)
-			self.filenames = check_files(self.filenames, num_channels, length, min_length=100, max_length=999999, max_num=num_examples, delay=self.delay)
+			self.filenames = check_files(self.filenames, num_channels, self.load_length, min_length=100, max_length=999999, max_num=num_examples, delay=self.delay)
 		print("Number of files found:", len(self.filenames), "Length:", length)
 		self.preloaded_examples = []
 		self.load_examples()
@@ -40,14 +41,18 @@ class EEGDataset(data.Dataset):
 
 	def __getitem__(self, index):
 		signals = self.preloaded_batches[index]
+		# signals = self.
+		signals = np.squeeze(signals)
+		# signals =  np.transpose(np.squeeze(signals), axes=[0,2,1])
 		sample = torch.from_numpy(np.asarray(signals))
-		sample = sample.view(-1, self.length, self.num_channels).type('torch.FloatTensor')
+		# TODO: find better solution to bucket problem
+		sample = sample.contiguous().view(-1, self.load_length, self.num_channels).type('torch.FloatTensor')[:, :self.length, :]
 		return sample
 
 	def load_examples(self):
 		examples = []
 		for filename in self.filenames:
-			examples += [read_filenames([filename], self.length)[0]]
+			examples += [read_filenames([filename], self.load_length)[0]]
 		self.preloaded_examples = examples
 
 	def create_batches(self):
@@ -72,6 +77,7 @@ def load_eeg_file(filename, normalize=False):
 	}
 	if normalize:
 		# print(type(signals.value))
+		print("normalize")
 		signals = sklearn.preprocessing.normalize((signals.value).T, axis=1).T
 		# print(signals.shape)
 	return signals, atributes, specs

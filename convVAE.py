@@ -16,7 +16,7 @@ cuda = True
 num_epochs = 2000
 batch_size = 64
 num_batches = 100
-print_iter = 2
+print_iter = 10
 latent_dim = 100
 img_shape = (1, 32, 32)
 
@@ -50,7 +50,7 @@ class ConvEncoder(nn.Module):
 # estimated_eegs = EstimatedEEGs(num_channels=44, length=1004, batch_size=batch_size)
 # data_file = "/mnt/data1/eegdbs/all_reports_impress_blanked-2019-02-23.csv"
 data_file = None
-real_eegs = EEGDataset("/mnt/data1/eegdbs/SEC-0.1/stanford/", csv_file=data_file, num_examples=64 * 4, num_channels=44,
+real_eegs = EEGDataset("/mnt/data1/eegdbs/SEC-0.1/stanford/", csv_file=data_file, num_examples=64 * 6, num_channels=44,
                        length=1004, delay=10000)
 print("loaded")
 # critereon = torch.nn.L1Loss()
@@ -91,20 +91,21 @@ def main():
                 eeg = eeg.cuda()
             # eeg *= 1e5 *4
             x_prime = net(eeg)
-            cost = critereon(x_prime, eeg) * 1e-7
+            cost = critereon(x_prime, eeg) * 1e3
             cost.backward()
             optim.step()
             costs_per_epoch += [cost.item()]
             if iters % print_iter == 0:
+                avg_cost_epoch = sum(costs_per_epoch) / len(costs_per_epoch)
                 print("[Iter: " + str(iters) + "] [Epoch: " + str(epoch) + "] [Avg cost in epoch %f ] [Loss: %f]" % (
                 avg_cost_epoch, cost.item()))
                 save_EEG(eeg.cpu().detach().view(batch_size, 1004, 44).numpy(), 44, 200,
-                         "./reonconstructed_eegs/D-orginal-" + str(epoch))
+                         "./reonconstructed_eegs/E-orginal-" + str(epoch))
                 save_EEG(x_prime.cpu().detach().view(batch_size, 1004, 44).numpy(), 44, 200,
-                         "./reonconstructed_eegs/D-generated-" + str(epoch))
+                         "./reonconstructed_eegs/E-generated-" + str(epoch))
         avg_cost_epoch = sum(costs_per_epoch) / len(costs_per_epoch)
         costs += [avg_cost_epoch]
-        np.save("./reonconstructed_eegs/convVAE-lr1e-4-N256-C44-L1004-N-D", np.asarray(costs))
+        np.save("./reonconstructed_eegs/convVAE-lr1e-4-N4390-C44-L1004-E", np.asarray(costs))
 
 
 if __name__ == "__main__":
