@@ -16,7 +16,7 @@ cuda = True
 num_epochs = 2000
 batch_size = 64
 num_batches = 100
-print_iter = 100
+print_iter = 2
 latent_dim = 100
 img_shape = (1, 32, 32)
 
@@ -65,8 +65,13 @@ net = nn.Sequential(
 
 if cuda:
     net.cuda()
-optim = torch.optim.Adam(net.parameters(), lr=1 * 1e-3)
+optim = torch.optim.Adam(net.parameters(), lr=1 * 1e-4)
 
+def normalize(batch):
+    batch = batch - batch.mean()
+    batch = batch / batch.std()
+    batch = batch / np.abs(batch).max()
+    return batch
 
 def main():
     iters = 0
@@ -77,6 +82,7 @@ def main():
         for i, eegs in enumerate(real_eegs):
             if (eegs.shape[0] != batch_size):
                 continue
+            eegs = normalize(eegs)
             iters += 1
             optim.zero_grad()
             # eeg = estimated_eegs[i]
@@ -93,12 +99,12 @@ def main():
                 print("[Iter: " + str(iters) + "] [Epoch: " + str(epoch) + "] [Avg cost in epoch %f ] [Loss: %f]" % (
                 avg_cost_epoch, cost.item()))
                 save_EEG(eeg.cpu().detach().view(batch_size, 1004, 44).numpy(), 44, 200,
-                         "./reonconstructed_eegs/B-orginal-" + str(epoch))
+                         "./reonconstructed_eegs/D-orginal-" + str(epoch))
                 save_EEG(x_prime.cpu().detach().view(batch_size, 1004, 44).numpy(), 44, 200,
-                         "./reonconstructed_eegs/B-generated-" + str(epoch))
+                         "./reonconstructed_eegs/D-generated-" + str(epoch))
         avg_cost_epoch = sum(costs_per_epoch) / len(costs_per_epoch)
         costs += [avg_cost_epoch]
-        np.save("./reonconstructed_eegs/convVAE-lr1e-3-N256-C44-L1004-B", np.asarray(costs))
+        np.save("./reonconstructed_eegs/convVAE-lr1e-4-N256-C44-L1004-N-D", np.asarray(costs))
 
 
 if __name__ == "__main__":
