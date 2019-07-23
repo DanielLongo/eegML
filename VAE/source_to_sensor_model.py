@@ -1,5 +1,5 @@
 import numpy as np
-
+from torch.autograd import Variable
 import torch
 from torch import nn
 import sys
@@ -26,13 +26,13 @@ class ForwardLearned(nn.Module):
                 final_activation,
             )
         self.encoder = nn.Sequential (
-            create_conv_sequence(44, 32, 4, 2), # self.conv1 = 
+            create_conv_sequence(768, 384, 4, 2), # self.conv1 = 
             nn.MaxPool1d(4, stride=1), # self.pool1 = 
-            create_conv_sequence(32, 16, 4, 2), # self.conv2 = 
+            create_conv_sequence(384, 192, 4, 2), # self.conv2 = 
             nn.MaxPool1d(4, stride=1), # self.pool2 = 
-            create_conv_sequence(16, 8, 4, 1), # self.conv3 = 
+            create_conv_sequence(192, 96, 4, 1), # self.conv3 = 
             nn.MaxPool1d(3, stride=1), # self.pool3 = 
-            create_conv_sequence(8, 1, 3, 1) # self.conv4 = 
+            create_conv_sequence(96, 1, 3, 1) # self.conv4 = 
         )
 
         self.fc1 = nn.Sequential (
@@ -46,7 +46,6 @@ class ForwardLearned(nn.Module):
         self.decoder.model.cur_block = 5 # there are six blocks and 5 is the last one
 
     def encode(self, x):
-        print("encode", x)
         conv = self.encoder(x)
         h1 = self.fc1(conv.view(conv.shape[0], -1))
         return self.fc21(h1), self.fc22(h1)
@@ -57,8 +56,14 @@ class ForwardLearned(nn.Module):
 
     def reparameterize(self, mu, logvar):
         std = logvar.mul(0.5).exp_()
+        if torch.cuda.is_available():
+            eps = torch.cuda.FloatTensor(std.size()).normal_()
+        else:
+             eps = torch.FloatTensor(std.size()).normal_()
         esp = torch.randn(*mu.size())
-        z = mu + std * esp
+        eps = Variable(eps)
+        z = eps.mul(std).add_(mu)
+        # z = mu + std * esp
         return z
 
         # def reparametrize(self, mu, logvar):
@@ -79,9 +84,7 @@ class ForwardLearned(nn.Module):
         #things to add:  batch norm layers 
 
         # First Encode Brain Space Activity
-        print("before", input.shape)
         input = torch.transpose(input, 1, 2)
-        print("after", input.shape)
         mu, logvar = self.encode(input)
 
         z = self.reparameterize(mu, logvar)
@@ -90,6 +93,7 @@ class ForwardLearned(nn.Module):
         out = self.decode(z)
 
         return out, mu, logvar
+
 
 if __name__ == "__main__":
     model = ForwardLearned()

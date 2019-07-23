@@ -16,9 +16,10 @@ class ForwardModelDataset(data.Dataset):
         self.preloaded_examples_eegs = []
         self.load_forward_model()
         self.load_examples()
+        assert(len(self.preloaded_examples_source) == len(self.preloaded_examples_eegs))
 
     def __len__(self):
-        return int(len(self.preloaded_examples / self.batch_size))
+        return int(len(self.preloaded_examples_source) / self.batch_size)
 
     def __getitem__(self, index):
         print("please use either .getEEGs or .getSources")
@@ -27,7 +28,7 @@ class ForwardModelDataset(data.Dataset):
     def getEEGs(self, index):
         start = self.batch_size * index
         end = start + self.batch_size
-        assert (end < len(self.preloaded_examples_eegs))
+        assert (end <= len(self.preloaded_examples_eegs))
         EEG = self.preloaded_examples_eegs[start: end]
         sample = torch.from_numpy(np.asarray(EEG)).type('torch.FloatTensor')
         return sample
@@ -35,7 +36,7 @@ class ForwardModelDataset(data.Dataset):
     def getSources(self, index):
         start = self.batch_size * index
         end = start + self.batch_size
-        assert (end < len(self.preloaded_examples_source))
+        assert (end <= len(self.preloaded_examples_source))
         source = self.preloaded_examples_source[start: end]
         sample = torch.from_numpy(np.asarray(source)).type('torch.FloatTensor')
         return sample
@@ -44,7 +45,7 @@ class ForwardModelDataset(data.Dataset):
         data_path = sample.data_path()
         raw_fname = data_path + '/MEG/sample/sample_audvis_raw.fif'
         self.info = mne.io.read_info(raw_fname)
-        fwd = mne.read_forward_solution("sample_forward_model")
+        fwd = mne.read_forward_solution("../forward_model/sample_forward_model")
         self.fwd_fixed = mne.convert_forward_solution(fwd, surf_ori=True, force_fixed=True,
                                                       use_cps=True)
         leadfield = self.fwd_fixed['sol']['data']
