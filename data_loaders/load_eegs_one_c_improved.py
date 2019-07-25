@@ -1,5 +1,7 @@
 import math
 import mne
+import sys
+sys.path.append("../GANs/")
 import time
 import datetime
 import numpy as np
@@ -77,26 +79,27 @@ class EEGDataset(data.Dataset):
 			print("preloaded batches is None")
 			return self.__getitem__(index + 1)
 		out = torch.FloatTensor(self.preloaded_batches[index])
+		# print("out", out.shape)
 		out = out.view(-1, self.length, 1)
 		return out
 
-	def load_file_data(self, batch_filenames): # loads into batches
-		print("batch filenames", batch_filenames)
-		#old bad method
-		signals, attributes = read_filenames(batch_filenames, self.length, delay=self.delay)
-		signals = np.asarray(signals)
-		signals = signals[:, :self.valid_unitl, :] # remove poor channels
-		single_channels = []
-		for example in signals:
-			for recording in example:
-				single_channels += [recording]
-		sample = split_into_batches(single_channels, self.batch_size)
-		try:
-			out = torch.from_numpy(np.asarray(sample[0]).reshape(self.batch_size, self.length, 1)).type('torch.FloatTensor')
-		except ValueError:
-			print("shape error in singe channel data loader")
-			return None
-		return out
+	# def load_file_data(self, batch_filenames): # loads into batches
+	# 	print("batch filenames", batch_filenames)
+	# 	#old bad method
+	# 	signals, attributes = read_filenames(batch_filenames, self.length, delay=self.delay)
+	# 	signals = np.asarray(signals)
+	# 	signals = signals[:, :self.valid_unitl, :] # remove poor channels
+	# 	single_channels = []
+	# 	for example in signals:
+	# 		for recording in example:
+	# 			single_channels += [recording]
+	# 	sample = split_into_batches(single_channels, self.batch_size)
+	# 	try:
+	# 		out = torch.from_numpy(np.asarray(sample[0]).reshape(self.batch_size, self.length, 1)).type('torch.FloatTensor')
+	# 	except ValueError:
+	# 		print("shape error in singe channel data loader")
+	# 		return None
+	# 	return out
 
 	def shuffle(self):
 		random.shuffle(self.preloaded_examples)

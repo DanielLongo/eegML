@@ -22,7 +22,9 @@ class ForwardLearned(nn.Module):
             return nn.Sequential(
                 nn.Conv1d(in_filters, in_filters, kernel_size=kernel_size, stride=stride, dilation=dilation),
                 nn.LeakyReLU(.2),
+                nn.BatchNorm1d(in_filters),
                 nn.Conv1d(in_filters, out_filters, kernel_size=kernel_size, stride=stride, dilation=dilation),
+                nn.BatchNorm1d(out_filters),
                 final_activation,
             )
         self.encoder = nn.Sequential (

@@ -13,8 +13,10 @@ import pandas as pd
 
 class EEGDataset(data.Dataset):
     def __init__(self, data_dir, csv_file=None, num_channels=19, num_examples=-1, batch_size=64, length=1000,
-                 delay=10000):
+                 delay=10000, channels_last=True, squeeze=True):
         self.delay = delay
+        self.squeeze = squeeze
+        self.channels_last = channels_last
         self.batch_size = batch_size
         self.length = length
         self.num_channels = num_channels
@@ -38,9 +40,14 @@ class EEGDataset(data.Dataset):
 
     def __getitem__(self, index):
         signals = self.preloaded_batches[index]
-        signals = np.squeeze(signals)
-        signals = np.transpose(np.squeeze(signals), axes=[0, 2, 1])
+        if self.channels_last:
+            if self.squeeze:
+                signals = np.squeeze(signals)
+                signals = np.transpose(signals, axes=[0, 2, 1])
+            else:
+                signals = np.transpose(signals, axes=[0, 1, 3, 2])
         sample = torch.from_numpy(np.asarray(signals)).type('torch.FloatTensor')
+        print("sample shape", sample.shape)
         return sample
 
     def load_examples(self):

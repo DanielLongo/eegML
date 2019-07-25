@@ -41,10 +41,10 @@ def save_reading(readings, file):
 
 
 def generate_readings(suffix, num_examples, filepath="../ProgressiveGAN/EEG-GAN/eeggan/examples/conv_lin/",
-                      prefix_d="discriminator", prefix_g="generator", block=5, num_channels=1):
+                      prefix_d="discriminator", prefix_g="generator", block=5, num_channels=1, use_cuda=True):
     d_filename = filepath + prefix_d + suffix + ".pt"
     g_filename = filepath + prefix_g + suffix + ".pt"
-    if torch.cuda.is_available():
+    if torch.cuda.is_available() and use_cuda:
         _, g = load_model(d_filename, g_filename, num_channels=num_channels)
     else:
         _, g = load_model(d_filename, g_filename, map_location='cpu', num_channels=num_channels)
@@ -55,15 +55,21 @@ def generate_readings(suffix, num_examples, filepath="../ProgressiveGAN/EEG-GAN/
     return samples
 
 
-def generate_readings_from_x_t(num_examples, filename, filepath="../VAE/", num_dipoles=7498, t=768):
+def generate_readings_from_x_t(num_examples, filename, filepath="../VAE/", num_dipoles=7498, t=768, use_gpu=True):
     g = ForwardLearned()
-    if torch.cuda.is_available():
-        g = g.load_state_dict(torch.load(filepath + filename + ".pt", map_location='gpu'))
-    else:
-        g = g.load_state_dict(torch.load(filepath + filename + ".pt", map_location='cpu'))
     z = generate_z_x_t(num_examples)
-    samples = np.squeeze(g(z).detach().numpy())
-    return samples
+    if torch.cuda.is_available() and use_gpu:
+        print("loading on a GPU")
+        g.load_state_dict(torch.load(filepath + filename + ".pt", map_location='gpu'))
+    else:
+        print("loading on a CPU")
+        g.load_state_dict(torch.load(filepath + filename + ".pt", map_location=lambda storage, loc: storage))
+    print("loading samples")
+    print("type of z", type(z))
+    g.cuda()
+    z = z.cuda()
+    samples, _, _ = g(z)
+    return np.squeeze(samples.cpu().detach().numpy())
 
 
 if __name__ == "__main__":

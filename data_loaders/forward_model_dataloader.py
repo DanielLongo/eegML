@@ -1,11 +1,15 @@
+import time
 import numpy as np
 import mne
 import torch
 from torch.utils import data
 from mne.datasets import sample
 import random
-
-
+import multiprocessing as mp
+from itertools import product
+import os
+# num_cpu = '9' # Set as a string
+# os.environ['OMP_NUM_THREADS'] = num_cpu
 class ForwardModelDataset(data.Dataset):
     def __init__(self, num_examples, num_channels=44, batch_size=64, length=1000):
         self.batch_size = batch_size
@@ -56,6 +60,37 @@ class ForwardModelDataset(data.Dataset):
         for i in range(self.num_examples):
             self.preloaded_examples_source += [np.random.randn(self.n_dipoles, self.length) * 1e-9]
             self.preloaded_examples_eegs += [self.generate_eeg(i)]
+        # processes =[mp.Process(target=self.generate_eeg, args=(i,)) for i in range(self.num_examples)]
+        # for p in processes: p.start()
+        # for p in processes: p.join()
+        # pool = mp.Pool(mp.cpu_count() - 4) # minus to be safe
+        # with mp.Pool(processes=mp.cpu_count() - 4) as pool:
+            # results = pool.starmap(self.generate_eeg, product(list(range(self.num_examples))))
+            # print(results)
+        # self.preloaded_examples_source = [(np.random.randn(self.n_dipoles, self.length) * 1e-9) for i in range(self.num_examples)]
+        # self.preloaded_examples_source = [x.get() for x in self.preloaded_examples_source]
+        # pool.close()
+        # pool.join()
+        # jobs = []
+        # for i in range(self.num_examples):
+        #     p = mp.Process(target=self.generate_eeg, args=(i,), name='daemon')
+        #     p.daemon = True
+        #     jobs.append(p)
+        # p.start()
+        # time.sleep(1)
+        # p.join()
+        # # with mp.Pool(mp.cpu_count() - 4) as pool:
+            # self.preloaded_examples_eegs = pool.map_async(self.generate_eeg, list(range(self.num_channels)))
+        # self.preloaded_examples_eegs = [pool.(self.generate_eeg(i)) for i in range(self.num_examples)]
+            # self.preloaded_examples_eegs = self.preloaded_examples_eegs.get() # [x.get() for x in self.preloaded_examples_eegs]
+        # pool.close()
+        # pool.join()
+        # print("type eegs", len(self.preloaded_examples_eegs)) 
+    # def generate_eeg(self, source_index):
+    #     stc = mne.SourceEstimate(self.preloaded_examples_source[source_index], self.vertices, tmin=0., tstep=1 / 250)
+    #     leadfield = mne.apply_forward(self.fwd_fixed, stc, self.info).data / 1e-9
+    #     self.preloaded_examples_eegs = [leadfield[:self.num_channels]]
+    #     print("finished", source_index, type(self.preloaded_examples_eegs[-1]))
 
     def generate_eeg(self, source_index):
         stc = mne.SourceEstimate(self.preloaded_examples_source[source_index], self.vertices, tmin=0., tstep=1 / 250)
@@ -68,7 +103,7 @@ class ForwardModelDataset(data.Dataset):
         self.preloaded_examples_source, self.preloaded_examples_eegs = zip(*combined)
 
 if __name__ == "__main__":
-    FMD = ForwardModelDataset(384, batch_size=64)
+    FMD = ForwardModelDataset(10, batch_size=4)
     print("EEG Shape", FMD.getEEGs(1).shape, torch.sum(FMD.getEEGs(1)))
     print("Source shape", FMD.getSources(1).shape, torch.sum(FMD.getSources(1)))
     FMD.shuffle()
