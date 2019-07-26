@@ -39,6 +39,7 @@ class EEGDataset(data.Dataset):
 		self.preloaded_examples = []
 		self.preloaded_batches = []
 		self.load_data()
+		self.create_batches()
 		# self.batched_examples_atribute = split_into_batches(self.examples_atribute, batch_size)
 		# self.batched_examples_signal = split_into_batches(self.examples_signal, batch_size)
 

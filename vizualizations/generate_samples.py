@@ -8,6 +8,7 @@ sys.path.append("../VAE/")
 import eeggan
 from source_to_sensor_model import ForwardLearned
 from eeggan.examples.conv_lin.model import Generator, Discriminator
+from sensor_to_sensor_model import SensorToSensor
 
 
 def load_model(d_filename, g_filename, n_z=200, map_location='gpu', num_channels=1):
@@ -70,6 +71,17 @@ def generate_readings_from_x_t(num_examples, filename, filepath="../VAE/", num_d
     z = z.cuda()
     samples, _, _ = g(z)
     return np.squeeze(samples.cpu().detach().numpy())
+
+def generate_readings_from_s_t(num_examples, filename, filepath="../VAE/", use_gpu=True):
+    g = SensorToSensor(num_channels=1)
+    if torch.cuda.is_available() and use_gpu:
+        g.load_state_dict(torch.load(filepath + filename + ".pt", map_location='gpu'))
+    else:
+        g.load_state_dict(torch.load(filepath + filename + ".pt", map_location='cpu'))
+
+    z = generate_noise(num_examples)
+    samples = np.squeeze(g.generate(z).detach().numpy())
+    return samples
 
 
 if __name__ == "__main__":
