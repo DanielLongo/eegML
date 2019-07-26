@@ -2,6 +2,7 @@
 import torch
 import numpy as np
 import sys
+
 sys.path.append("../data_loaders/")
 from torch import nn, optim
 from torch.nn import functional as F
@@ -10,44 +11,71 @@ from sensor_to_sensor_model import SensorToSensor
 from load_eegs_one_c_improved import EEGDataset
 
 num_epochs = 100000
-dataset = EEGDataset("/mnt/data1/eegdbs/SEC-0.1/stanford/", num_examples=64*7, num_channels=44, length=768, csv_file=None)
+dataset = EEGDataset("/mnt/data1/eegdbs/SEC-0.1/stanford/", num_examples=64 * 7, num_channels=44, length=768,
+                     csv_file=None)
 # dataset = ForwardModelDataset(4, batch_size=2, length=768)
 use_cuda = torch.cuda.is_available()
 
 model = SensorToSensor(num_channels=1)
 if use_cuda:
-	model.cuda()
+    model.cuda()
 # optimizer = optim.Adam(model.parameters(), lr=1e-2)
 optimizer = optim.Adam(model.parameters())
+
+
 # optimizer = optim.Adam(model.parameters(), lr=1e-6)
 
-def loss_function(recon_x, x, mu, logvar, print_=False):
-    # BCE = F.binary_cross_entropy(recon_x, x, size_average=False) #, reduction="mean")# * 1e-6
-    BCE = F.mse_loss(recon_x, x, size_average=False)
-    # BCE *= 1e-5
-# see Appendix B from VAE paper:
+def recons_loss(recon_x, x):
+    d = 1 if len(recon_x.shape) == 2 else (1, 2, 3)
+
+    return torch.sum(F.mse_loss(recon_x, x, reduction='none'), dim=d)
+
+
+def vae_gaussian_kl_loss(mu, logvar):
+    # see Appendix B from VAE paper:
     # Kingma and Welling. Auto-Encoding Variational Bayes. ICLR, 2014
     # https://arxiv.org/abs/1312.6114
     # 0.5 * sum(1 + log(sigma^2) - mu^2 - sigma^2)
-    KLD = -0.5 * torch.sum(1 + logvar - mu.pow(2) - logvar.exp())
-    # KLD *= 1e-1
-    KLD *= 3
-    # KLD = 0
-    # if print_:
-        # print("KLD", KLD, "BCE ", BCE)
-# return BCE + KLD
-    return (BCE + KLD) * .015
+    KLD = -0.5 * torch.sum(1 + logvar - mu.pow(2) - logvar.exp(), dim=1)
+
+    return KLD
+
+
+def loss_function(recon_x, x, mu, logvar, print_=False):
+    likelihood = recons_loss(recon_x, x)
+    kl_loss = vae_gaussian_kl_loss(mu, logvar)
+    vae_loss = likelihood + kl_loss
+
+    return torch.sum(vae_loss)
+    # BCE = F.binary_cross_entropy(recon_x, x, size_average=False) #, reduction="mean")# * 1e-6
+    # BCE = F.mse_loss(recon_x, x, size_average=False)
+    # # BCE *= 1e-5
+    # # see Appendix B from VAE paper:
+    # # Kingma and Welling. Auto-Encoding Variational Bayes. ICLR, 2014
+    # # https://arxiv.org/abs/1312.6114
+    # # 0.5 * sum(1 + log(sigma^2) - mu^2 - sigma^2)
+    # KLD = -0.5 * torch.sum(1 + logvar - mu.pow(2) - logvar.exp())
+    # # KLD *= 1e-1
+    # KLD *= 3
+    # # KLD = 0
+    # # if print_:
+    # # print("KLD", KLD, "BCE ", BCE)
+    # # return BCE + KLD
+    # return (BCE + KLD) * .015
+
 
 def autoencoder_loss(recon_x, x):
     BCE = F.mse_loss(recon_x, x, size_average=False)
     # print("BCE", BCE)
     return BCE
 
+
 def normalize(batch):
     batch = batch - batch.mean()
     batch = batch / batch.std()
     batch = batch / np.abs(batch).max()
     return batch
+
 
 def train(num_epochs):
     model.train()
@@ -82,7 +110,7 @@ def train(num_epochs):
                 np.save("samples_sensor_to_sensor/test-5-recon", recon_batch.detach().cpu().numpy())
                 np.save("samples_sensor_to_sensor/test-5-original", s_t.detach().cpu().numpy())
                 np.save("StS-test-5", np.asarray(costs))
-                torch.save(model.state_dict(),  "VAE-" + "StS-test-5-BIGgrad" + ".pt")
+                torch.save(model.state_dict(), "VAE-" + "StS-test-5-BIGgrad" + ".pt")
             s_t = m(s_t)
             recon_batch = m(recon_batch)
             loss = loss_function(recon_batch, s_t, mu, logvar, print_=print_)
@@ -98,7 +126,8 @@ def train(num_epochs):
         costs += [cur_epoch_loss / cur_epoch_iters]
         if print_:
             print('====> Epoch: {} Average loss: {:.4f}'.format(
-              i, cur_epoch_loss / cur_epoch_iters))
+                i, cur_epoch_loss / cur_epoch_iters))
+
 
 train(num_epochs)
 print("finished StS-test-5-BIGgrad")
