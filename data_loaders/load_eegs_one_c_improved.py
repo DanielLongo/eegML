@@ -40,6 +40,7 @@ class EEGDataset(data.Dataset):
 		self.preloaded_batches = []
 		self.load_data()
 		self.create_batches()
+		self.shuffle()
 		# self.batched_examples_atribute = split_into_batches(self.examples_atribute, batch_size)
 		# self.batched_examples_signal = split_into_batches(self.examples_signal, batch_size)
 
@@ -191,6 +192,7 @@ def split_into_batches(x, examples_per_batch):
 		end = start + examples_per_batch
 		final += [x[start:end]]
 	# print("final", np.shape(final))
+	# print("final", len(final))
 	return final
 
 def read_filenames(filenames, length, delay=10000):
@@ -288,13 +290,15 @@ if __name__ == "__main__":
 	# csv_file = "/mnt/data1/eegdbs/all_reports_impress_blanked-2019-02-23.csv"
 	# dataset = EEGDataset("/mnt/data1/eegdbs/SEC-0.1/stanford/", csv_file=csv_file, num_examples=200, num_channels=44, length=1004)
 	# dataset = EEGDataset("/mnt/data1/eegdbs/SEC-0.1/stanford/",  num_examples=438, num_channels=44, length=768)
-	dataset = EEGDataset("/mnt/data1/eegdbs/SEC-0.1/stanford/",  num_examples=438, batch_size=64, num_channels=44, length=768)
+	# dataset = EEGDataset("/mnt/data1/eegdbs/SEC-0.1/stanford/",  num_examples=438, batch_size=64, num_channels=44, length=768)
+	dataset = EEGDataset("/mnt/data1/eegdbs/SEC-0.1/stanford/", num_examples=20, batch_size=4, num_channels=44, length=768, csv_file=None)
 	print("shuffling")
 	dataset.shuffle()
 	print("shuffling finsihed")
 	print("loading")
 	print("sample shape", dataset[0].shape)
 	print("loading finsihed")
+	print(len(dataset))
 	# csv_file = "/Users/DanielLongo/server/mnt/data1/eegdbs/all_reports_impress_blanked-2019-02-23.csv"
 	# dataset = EEGDataset("./eeg-hdfstorage", csv_file=csv_file, num_examples=64, num_channels=44, length=1004)
 	# print("finna'l",dataset[0].shape)

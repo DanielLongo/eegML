@@ -257,8 +257,9 @@ def load_filenames_from_csv(csv_filename, filepath="/mnt/data1/eegdbs/SEC-0.1/",
 
 if __name__ == "__main__":
     # csv_file = "/mnt/data1/eegdbs/all_reports_impress_blanked-2019-02-23.csv"
-    csv_file = None
-    dataset = EEGDataset("/mnt/data1/eegdbs/SEC-0.1/stanford/", csv_file=csv_file, num_examples=438, batch_size=8,
+    csv_file = "/mnt/data1/eegdbs/all_reports_impress_blanked-2019-03-01.csv"
+    # csv_file = None
+    dataset = EEGDataset("/mnt/data1/eegdbs/SEC-0.1/stanford/", csv_file=csv_file, num_examples=30, batch_size=5,
                          num_channels=44, length=1004)
     start = time.time()
     print("a")
@@ -266,6 +267,7 @@ if __name__ == "__main__":
     print(time.time() - start)
     print("shape of sample", dataset[0].shape)
     print(time.time() - start)
+    print(len(dataset))
 # csv_file = "/Users/DanielLongo/server/mnt/data1/eegdbs/all_reports_impress_blanked-2019-02-23.csv"
 # dataset = EEGDataset("./eeg-hdfstorage", csv_file=csv_file, num_examples=64, num_channels=44, length=1004)
 # save_EEG(dataset[0], None, None, "save_dataloader")

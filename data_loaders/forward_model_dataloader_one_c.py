@@ -13,28 +13,33 @@ import os
 # num_cpu = '9' # Set as a string
 # os.environ['OMP_NUM_THREADS'] = num_cpu
 class ForwardModelDataset(data.Dataset):
-    def __init__(self, num_examples, num_channels=-1, batch_size=64, length=1000, save_x_t=False,
-                 examples_per_generation=-1):
+    def __init__(self, num_examples, num_channels=44, batch_size=64, length=1000, save_x_t=False):
         self.batch_size = batch_size
         self.length = length
         self.num_channels = num_channels
         self.num_examples = num_examples
-        self.num_examples_required = np.math.ceil(num_examples / examples_per_generation)
+        self.num_examples_required = np.math.ceil(num_examples / self.num_channels)
         self.preloaded_examples_source = []
         self.preloaded_examples_eegs = []
         self.save_x_t = save_x_t
-        self.examples_per_generation = examples_per_generation
         self.load_forward_model()
         self.load_examples()
         if save_x_t:
             assert (len(self.preloaded_examples_source) == len(self.preloaded_examples_eegs))
 
     def __len__(self):
-        return int(len(self.preloaded_examples_source) / self.batch_size)
+        return int(len(self.preloaded_examples_eegs) / self.batch_size)
 
     def __getitem__(self, index):
-        print("please use either .getEEGs or .getSources")
-        return None
+        # print("please use either .getEEGs or .getSources")
+        # return None
+        start = self.batch_size * index
+        end = start + self.batch_size
+        assert (end <= len(self.preloaded_examples_eegs))
+        EEG = self.preloaded_examples_eegs[start: end]
+        sample = torch.from_numpy(np.asarray(EEG)).type('torch.FloatTensor')
+        sample = sample.view(-1, self.length, 1)
+        return sample
 
     def getEEGs(self, index):
         start = self.batch_size * index
@@ -58,7 +63,9 @@ class ForwardModelDataset(data.Dataset):
         data_path = sample.data_path()
         raw_fname = data_path + '/MEG/sample/sample_audvis_raw.fif'
         self.info = mne.io.read_info(raw_fname)
-        fwd = mne.read_forward_solution("../forward_model/sample_forward_model")
+        # fwd = mne.read_forward_solution("../forward_model/sample_forward_model")
+        # fwd = mne.read_forward_solution("../../../../../forward_model/sample_forward_model") # when run.py path relative?
+        fwd = mne.read_forward_solution("/mnt/home2/dlongo/eegML/forward_model/sample_forward_model")
         self.fwd_fixed = mne.convert_forward_solution(fwd, surf_ori=True, force_fixed=True,
                                                       use_cps=True)
         leadfield = self.fwd_fixed['sol']['data']
@@ -67,13 +74,15 @@ class ForwardModelDataset(data.Dataset):
 
     def load_examples(self):
         if self.save_x_t:
-            for i in range(self.num_examples):
+            for i in range(self.num_examples_required):
                 self.preloaded_examples_source += [np.random.randn(self.n_dipoles, self.length) * 1e-9]
                 self.preloaded_examples_eegs += self.generate_eeg(i)
+                self.preloaded_examples_source[:self.num_examples]
         else:
-            for i in range(self.num_examples):
+            for i in range(self.num_examples_required):
                 self.preloaded_examples_eegs += self.generate_source_then_eeg()
-        print("pre", len(self.preloaded_examples_eegs), np.asarray(self.preloaded_examples_eegs).shape)
+        self.preloaded_examples_eegs = self.preloaded_examples_eegs[:self.num_examples]
+        # print("pre", len(self.preloaded_examples_eegs), np.asarray(self.preloaded_examples_eegs).shape)
         # processes =[mp.Process(target=self.generate_eeg, args=(i,)) for i in range(self.num_examples)]
         # for p in processes: p.start()
         # for p in processes: p.join()
@@ -128,9 +137,10 @@ class ForwardModelDataset(data.Dataset):
 
 
 if __name__ == "__main__":
-    FMD = ForwardModelDataset(10, batch_size=4)
+    FMD = ForwardModelDataset(10, batch_size=2)
     print("EEG Shape", FMD.getEEGs(1).shape, torch.sum(FMD.getEEGs(1)))
     # print("Source shape", FMD.getSources(1).shape, torch.sum(FMD.getSources(1)))
     FMD.shuffle()
     print("EEG Shape", FMD.getEEGs(1).shape, torch.sum(FMD.getEEGs(1)))
+    print(len(FMD))
     # print("Source shape", FMD.getSources(1).shape, torch.sum(FMD.getSources(1)))
