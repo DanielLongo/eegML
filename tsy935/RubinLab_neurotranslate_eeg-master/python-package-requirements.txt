@@ -1,0 +1,6 @@
+future
+h5py==2.6
+objdict
+tensorboardX
+torchvision
+en_core_web_sm

@@ -41,7 +41,7 @@ def save_reading(readings, file):
     np.save(file, readings)
 
 
-def generate_readings(suffix, num_examples, filepath="../ProgressiveGAN/EEG-GAN/eeggan/examples/conv_lin/",
+def generate_readings(suffix, num_examples, filepath="../ProgressiveGAN/EEG-GAN/eeggan/examples/conv_lin/saved_models/",
                       prefix_d="discriminator", prefix_g="generator", block=5, num_channels=1, use_cuda=True):
     d_filename = filepath + prefix_d + suffix + ".pt"
     g_filename = filepath + prefix_g + suffix + ".pt"

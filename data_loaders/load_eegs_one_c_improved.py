@@ -13,7 +13,7 @@ import random
 import sklearn
 from sklearn import preprocessing
 import pandas as pd
-from utils import save_EEG
+# from utils import save_EEG
 
 class EEGDataset(data.Dataset):
 	def __init__(self, data_dir, csv_file=None, num_channels=19, num_examples=-1, batch_size=64, length=1000, delay=10000):

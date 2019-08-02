@@ -16,14 +16,19 @@ num_epochs = 100000
 # dataset = EEGDataset("/mnt/data1/eegdbs/SEC-0.1/stanford/", num_examples=20, batch_size=4, num_channels=44, length=768,
                      # csv_file=None)
 # dataset = ForwardModelDataset(10, batch_size=4)
-dataset = ForwardModelDataset(64 * 3, batch_size=64, length=768)
+# dataset = ForwardModelDataset(64 * 10, batch_size=64, length=768)
+csv_file = "/mnt/data1/eegdbs/all_reports_impress_blanked-2019-03-01.csv"
+dataset = EEGDataset("/mnt/data1/eegdbs/SEC-0.1/stanford/", num_examples=64*2, num_channels=44,
+                      length=768, csv_file=csv_file)
 use_cuda = torch.cuda.is_available()
 
-encoder = "../ProgressiveGAN/EEG-GAN/eeggan/examples/conv_lin/discriminator--L-single-estimated.pt"
-encoder = None
-decoder = "../ProgressiveGAN/EEG-GAN/eeggan/examples/conv_lin/generator--L-single-estimated.pt"
+encoder = "../ProgressiveGAN/EEG-GAN/eeggan/examples/conv_lin/saved_models/discriminator--L-single-estimated.pt"
+# encoder = None
+decoder = "../ProgressiveGAN/EEG-GAN/eeggan/examples/conv_lin/saved_models/generator--L-single-estimated.pt"
 # decoder = None
 model = SensorToSensor(num_channels=1, pretrained_encoder=encoder, pretrained_decoder=decoder)
+test_num = 6
+
 if use_cuda:
     model.cuda()
 # optimizer = optim.Adam(model.parameters(), lr=1e-2)
@@ -33,9 +38,9 @@ optimizer = optim.Adam(model.parameters())
 # optimizer = optim.Adam(model.parameters(), lr=1e-6)
 
 def recons_loss(recon_x, x):
-    d = 1 if len(recon_x.shape) == 2 else (1, 2, 3)
+    # d = 1 if len(recon_x.shape) == 2 else (1, 2, 3)
 
-    return torch.sum(F.mse_loss(recon_x, x, reduction='none'), dim=d)
+    return F.mse_loss(recon_x, x,  reduction='sum')
     # return F.mse_loss(recon_x, x, size_average=False)
 
 def vae_gaussian_kl_loss(mu, logvar):
@@ -45,13 +50,13 @@ def vae_gaussian_kl_loss(mu, logvar):
     # 0.5 * sum(1 + log(sigma^2) - mu^2 - sigma^2)
     KLD = -0.5 * torch.sum(1 + logvar - mu.pow(2) - logvar.exp(), dim=1)
 
-    return KLD
+    return torch.sum(KLD)
 
 
 def loss_function(recon_x, x, mu, logvar, print_=False):
     likelihood = recons_loss(recon_x, x)
-    kl_loss = vae_gaussian_kl_loss(mu, logvar) * 0
-    vae_loss = (likelihood + kl_loss)  #* 1e-9
+    kl_loss = vae_gaussian_kl_loss(mu, logvar)
+    vae_loss = (likelihood + kl_loss * 5)
     return torch.sum(vae_loss)
     # BCE = F.binary_cross_entropy(recon_x, x, size_average=False) #, reduction="mean")# * 1e-6
     # BCE = F.mse_loss(recon_x, x, size_average=False)
@@ -90,14 +95,15 @@ def train(num_epochs):
     iters = 0
     print_iter = 20
     print_ = False
-    lr = 1e-4
+    lr = 1e-7
     optimizer = optim.Adam(model.parameters(), lr=lr)
     # m = nn.Sigmoid()
     for i in range(num_epochs):
+        optimizer = optim.Adam(model.parameters(), lr=lr)
         cur_epoch_loss = 0
         cur_epoch_iters = 0
         dataset.shuffle()
-        # lr *= .99
+        lr *= .995
         for j in range(len(dataset)):
             # print("ONE ITER")
             iters += 1
@@ -117,10 +123,10 @@ def train(num_epochs):
             recon_batch = recon_batch.squeeze()
             s_t = s_t.squeeze()
             if i % 50 == 0 and j == 0:
-                np.save("samples_sensor_to_sensor/test-5-recon", recon_batch.detach().cpu().numpy())
-                np.save("samples_sensor_to_sensor/test-5-original", s_t.detach().cpu().numpy())
+                np.save("samples_sensor_to_sensor/test-" + str(test_num) + "-recon", recon_batch.detach().cpu().numpy())
+                np.save("samples_sensor_to_sensor/test-" + str(test_num) + "-original", s_t.detach().cpu().numpy())
                 np.save("StS-test-5", np.asarray(costs))
-                torch.save(model.state_dict(), "VAE-" + "StS-test-5-BIGgrad" + ".pt")
+                torch.save(model.state_dict(), "VAE-" + "StS-test-" + str(test_num) + "-csv" + ".pt")
             # s_t = m(s_t)
             # recon_batch = m(recon_batch)
             loss = loss_function(recon_batch, s_t, mu, logvar, print_=print_)

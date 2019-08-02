@@ -1,0 +1,26 @@
+name: eeg
+channels:
+#  - https://nero-mirror.stanford.edu/conda/main
+  - https://nero-mirror.stanford.edu/conda/pytorch
+  - https://nero-mirror.stanford.edu/conda/conda-forge
+dependencies:
+  - python=3.6
+  - matplotlib
+  - numpy
+  - pip
+  - spacy
+  - pip:
+    - tensorboardX
+    - snorkel-metal
+  - future
+  - h5py
+  - torchvision 
+  - pandas
+  - dask
+  - jsonschema
+  - nb_conda_kernels
+  - scikit-image
+  - opencv
+  - fire
+  - tensorflow
+  - nose

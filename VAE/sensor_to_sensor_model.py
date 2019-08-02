@@ -13,11 +13,11 @@ class SensorToSensor(nn.Module):
         super(SensorToSensor, self).__init__()
 
         self.fc1 = nn.Sequential (
-            nn.Linear(300, 200),
+            nn.Linear(300, 250),
 
         )
-        self.fc21 = nn.Linear(200, 200)
-        self.fc22 = nn.Linear(200, 200)
+        self.fc21 = nn.Linear(250, 200)
+        self.fc22 = nn.Linear(250, 200)
 
         self.encoder = Discriminator(num_channels, n_out_linear=300)
         if pretrained_encoder != None:
@@ -40,13 +40,16 @@ class SensorToSensor(nn.Module):
         if pretrained_decoder != None:
             self.decoder.load_state_dict(torch.load(pretrained_decoder))
         self.decoder.model.cur_block = 5
-        for param in self.decoder.parameters():
-            param.requires_grad = False
+        # for param in self.decoder.parameters():
+        #     param.requires_grad = False
 
-    def encode(self, x):
-        x = self.encoder_model.downsample_to_block(
+    def transform_to_res(self, x):
+        return self.encoder_model.downsample_to_block(
                     Variable(x[:, :, :, None].view(x.shape[0], 1, 768, 1), requires_grad=False),
                     self.encoder_block)
+        
+    def encode(self, x):
+        x = self.transform_to_res(x)
         conv = self.encoder(x)
         h1 = self.fc1(conv)
         self.h1 = h1
@@ -80,7 +83,7 @@ class SensorToSensor(nn.Module):
 
         # Then Decode to Sensor Space
         # out = self.decode(z)
-        out = self.decode(self.h1)
+        out = self.decode(z)
 
         return out, mu, logvar
 

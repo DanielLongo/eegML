@@ -1,0 +1,18 @@
+name: eeg
+channels:
+  - pytorch
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.6
+  - nb_conda
+  - matplotlib
+  - numpy=1.13.3
+  - pip
+  - spacy=2.0.16
+  - tensorboardX
+  - future
+  - h5py=2.6
+  - torchvision 
+  - pandas
+  - dask
