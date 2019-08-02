@@ -170,6 +170,11 @@ def train(epoch, model, train_loader, optimizer, cuda, log_interval, save_path, 
     start_time = time.time()
     batch_idx, data = None, None
     for batch_idx, (data, _, _) in enumerate(train_loader):
+        if data.shape[0] != args["batch_size"] or data.shape[1] != 9:
+            continue
+        data = data.view(args["batch_size"] * 9, 3, 224, 224)
+        data = torch.nn.functional.pad(input=data, pad=(0,0, 0,0, 16,16, 0,0), mode='constant', value=0)
+        print("data shape", data.shape)
         if cuda:
             data = data.cuda()
         optimizer.zero_grad()
