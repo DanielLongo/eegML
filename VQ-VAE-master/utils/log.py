@@ -55,7 +55,7 @@ def export_args(args, save_path):
     os.makedirs(save_path, exist_ok=True)
     json_file_name = os.path.join(save_path, 'args.json')
     with open(json_file_name, 'w') as fp:
-        json.dump(dict(args._get_kwargs()), fp, sort_keys=True, indent=4)
+        json.dump(args, fp, sort_keys=True, indent=4)
 
 
 def setup_logging(log_file='log.txt', resume=False):

@@ -51,6 +51,7 @@ class NearestEmbedFunc(Function):
 
         if ctx.needs_input_grad[1]:
             argmin = ctx.saved_variables
+            argmin = argmin[0] # TODO: assert tuple[1] no value
             latent_indices = torch.arange(ctx.num_emb).type_as(argmin)
             idx_choices = (argmin.view(-1, 1) == latent_indices.view(1, -1)).type_as(grad_output.data)
             n_idx_choice = idx_choices.sum(0)

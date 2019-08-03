@@ -9,11 +9,13 @@ from torch import optim
 import torch.backends.cudnn as cudnn
 from torchvision import datasets, transforms
 from torchvision.utils import save_image
-
-from utils.log import setup_logging_and_results
+sys.path.append("../utils/")
+from log import setup_logging_and_results
+# from utils.log import setup_logging_and_results
+sys.path.append("../")
 from vq_vae.auto_encoder import *
 
-sys.path.append("../tsy935/RubinLab_neurotranslate_eeg-master/eeg/data/")
+sys.path.append("../../tsy935/RubinLab_neurotranslate_eeg-master/eeg/data/")
 from data_loader import SeizureDataset
 
 models = {'imagenet': {'vqvae': VQ_CVAE},
@@ -35,8 +37,8 @@ dataset_sizes = {'imagenet': (3, 256, 224),
                  'cifar10': (3, 32, 32),
                  'mnist': (1, 28, 28)}
 
-dataset_transforms = {'imagenet': transforms.Compose([transforms.Resize(128), transforms.CenterCrop(128),
-                                                      transforms.ToTensor(),
+dataset_transforms = {'imagenet': transforms.Compose([#transforms.Resize(128), transforms.CenterCrop(128),
+                                                      # transforms.ToTensor(),
                                                       transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))]),
                       'cifar10': transforms.Compose([transforms.ToTensor(),
                                                      transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))]),
@@ -48,24 +50,25 @@ default_hyperparams = {'imagenet': {'lr': 2e-4, 'k': 512, 'hidden': 128},
 
 def main(args):
     args = {
-        "model": "vae",  # vqvae also available
-        "batch_size": 64,
+        "model": "vqvae",
+        "batch_size": 1, # 7 * 9 = 63 (close to desired 64)
         "hidden": 128,
         "k": 512,
         "lr": 2e-4,
         "vq_coef": 1,  # ?
-        "commit_coef": 3,  # ?
-        "kl_coef": 1,  # ?
+        "commit_coef": 1,  # ?
+        "kl_coef": 5,  # ?
         "dataset": "imagenet",
         "epochs": 20,
         "cuda": torch.cuda.is_available(),
         "seed": 1,
         "gpus": "1",
-        "log_interval": 10,
+        "log_interval": 50,
         "results_dir": "VAE_imagenet",
         "save_name": "first",
         "data_format": "json"
     }
+
     #
     # parser = argparse.ArgumentParser(description='Variational AutoEncoders')
     #
@@ -129,6 +132,7 @@ def main(args):
         torch.cuda.manual_seed(args["seed"])
 
     model = models[args["dataset"]][args["model"]](hidden, k=k, num_channels=num_channels)
+    print("Number of Parameters in Model:", sum(p.numel() for p in model.parameters() if p.requires_grad))
     if args["cuda"]:
         model.cuda()
 
@@ -138,28 +142,28 @@ def main(args):
     kwargs = {'num_workers': 1, 'pin_memory': True} if args["cuda"] else {}
 
     train_loader = torch.utils.data.DataLoader(
-        dataset=SeizureDataset(),
+        dataset=SeizureDataset(transform=dataset_transforms[args["dataset"]]),
         shuffle=True,
         batch_size=args["batch_size"],
-        transform=dataset_transforms[args["dataset"]],
+        # transform=dataset_transforms[args["dataset"]],
     )
 
     test_loader = torch.utils.data.DataLoader(
-        datasets=SeizureDataset(),  # TODO: add test filename for dataset initialization
-        transform=dataset_transforms[args["dataset"]],
+        dataset=SeizureDataset(transform=dataset_transforms[args["dataset"]]),  # TODO: add test filename for dataset initialization
+        # transform=dataset_transforms[args["dataset"]],
         batch_size=args["batch_size"],
         shuffle=True
     )
 
     for epoch in range(1, args["epochs"] + 1):
         train_losses = train(epoch, model, train_loader, optimizer, args["cuda"], args["log_interval"], save_path, args)
-        test_losses = test_net(epoch, model, test_loader, args["cuda"], save_path, args)
-        results.add(epoch=epoch, **train_losses, **test_losses)
-        for k in train_losses:
-            key = k[:-6]
-            results.plot(x='epoch', y=[key + '_train', key + '_test'])
-        results.save()
-        scheduler.step()
+        # test_losses = test_net(epoch, model, test_loader, args["cuda"], save_path, args)
+        # results.add(epoch=epoch, **train_losses, **test_losses)
+        # for k in train_losses:
+        #     key = k[:-6]
+        #     results.plot(x='epoch', y=[key + '_train', key + '_test'])
+        # results.save()
+        # scheduler.step()
 
 
 def train(epoch, model, train_loader, optimizer, cuda, log_interval, save_path, args):
@@ -172,9 +176,9 @@ def train(epoch, model, train_loader, optimizer, cuda, log_interval, save_path, 
     for batch_idx, (data, _, _) in enumerate(train_loader):
         if data.shape[0] != args["batch_size"] or data.shape[1] != 9:
             continue
-        data = data.view(args["batch_size"] * 9, 3, 224, 224)
-        data = torch.nn.functional.pad(input=data, pad=(0,0, 0,0, 16,16, 0,0), mode='constant', value=0)
-        print("data shape", data.shape)
+        data = data.view(args["batch_size"] * 9, 3, 224, 224)[:5, :, :, :]
+        # print("before shape", data.shape)
+        data = torch.nn.functional.pad(input=data, pad=(0,0, 16,16, 0,0, 0,0), mode='constant', value=0)
         if cuda:
             data = data.cuda()
         optimizer.zero_grad()

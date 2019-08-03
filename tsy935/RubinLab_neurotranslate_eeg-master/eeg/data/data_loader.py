@@ -20,7 +20,7 @@ from constants import *
 
 
 class SeizureDataset(Dataset):  
-    def __init__(self, file_dir=TRAIN_SEIZURE_FILE, num_folds=5, fold_idx=None, cross_val=False, split='train', test_freq=96): #, reduce_2nd_dim=False):
+    def __init__(self, file_dir=TRAIN_SEIZURE_FILE, num_folds=5, fold_idx=None, cross_val=False, split='train', test_freq=96, transform=None): #, reduce_2nd_dim=False):
         """
         Args:
             file_dir: (string) directory containing the list of file names to pull in
@@ -36,6 +36,7 @@ class SeizureDataset(Dataset):
         self.split = split
         self.file_dir = file_dir
         self.test_freq = test_freq
+        self.transform = transform
         print('file dir:{}'.format(file_dir))
         
         if cross_val:
@@ -100,8 +101,10 @@ class SeizureDataset(Dataset):
         #print('Label shape: {}'.format(label.size()))
         
         writeout_file_name = curr_file_name + '_' + str(seizure_idx)
-        
-        return (feature, label, writeout_file_name)
+        if self.transform is None:
+            return (feature, label, writeout_file_name)
+        else:
+            return (self.transform(feature), label, writeout_file_name)
 # import pyedflib
 # import os
 # import numpy as np
