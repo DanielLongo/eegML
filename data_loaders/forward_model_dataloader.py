@@ -11,16 +11,18 @@ import os
 # num_cpu = '9' # Set as a string
 # os.environ['OMP_NUM_THREADS'] = num_cpu
 class ForwardModelDataset(data.Dataset):
-    def __init__(self, num_examples, num_channels=44, batch_size=64, length=1000):
+    def __init__(self, num_examples, num_channels=44, batch_size=64, length=1000, save_source=True):
         self.batch_size = batch_size
         self.length = length
         self.num_channels = num_channels
         self.num_examples = num_examples
         self.preloaded_examples_source = []
         self.preloaded_examples_eegs = []
+        self.save_source = save_source
         self.load_forward_model()
         self.load_examples()
-        assert(len(self.preloaded_examples_source) == len(self.preloaded_examples_eegs))
+        if save_source:
+            assert(len(self.preloaded_examples_source) == len(self.preloaded_examples_eegs))
 
     def __len__(self):
         return int(len(self.preloaded_examples_source) / self.batch_size)
@@ -37,7 +39,13 @@ class ForwardModelDataset(data.Dataset):
         sample = torch.from_numpy(np.asarray(EEG)).type('torch.FloatTensor')
         return sample
 
+    def getAllEEGs(self):
+        return self.preloaded_examples_eegs
+
     def getSources(self, index):
+        if not self.save_source:
+            print("sources not saved", len(self.preloaded_examples_source))
+            return None
         start = self.batch_size * index
         end = start + self.batch_size
         assert (end <= len(self.preloaded_examples_source))
@@ -49,7 +57,7 @@ class ForwardModelDataset(data.Dataset):
         data_path = sample.data_path()
         raw_fname = data_path + '/MEG/sample/sample_audvis_raw.fif'
         self.info = mne.io.read_info(raw_fname)
-        fwd = mne.read_forward_solution("../forward_model/sample_forward_model")
+        fwd = mne.read_forward_solution("/mnt/home2/dlongo/eegML/forward_model/sample_forward_model")
         self.fwd_fixed = mne.convert_forward_solution(fwd, surf_ori=True, force_fixed=True,
                                                       use_cps=True)
         leadfield = self.fwd_fixed['sol']['data']
@@ -57,9 +65,18 @@ class ForwardModelDataset(data.Dataset):
         self.vertices = [src_hemi['vertno'] for src_hemi in self.fwd_fixed['src']]
 
     def load_examples(self):
-        for i in range(self.num_examples):
-            self.preloaded_examples_source += [np.random.randn(self.n_dipoles, self.length) * 1e-9]
-            self.preloaded_examples_eegs += [self.generate_eeg(i)]
+        if not self.save_source:
+            for i in range(self.num_examples):
+                self.preloaded_examples_source += [np.random.randn(self.n_dipoles, self.length) * 1e-9]
+                assert(len(self.preloaded_examples_source) == 1)
+                self.preloaded_examples_eegs += [self.generate_eeg(0)]
+                self.preloaded_examples_source = []
+        else:
+            for i in range(self.num_examples):
+                self.preloaded_examples_source += [np.random.randn(self.n_dipoles, self.length) * 1e-9]
+                self.preloaded_examples_eegs += [self.generate_eeg(i)]
+        
+        
         # processes =[mp.Process(target=self.generate_eeg, args=(i,)) for i in range(self.num_examples)]
         # for p in processes: p.start()
         # for p in processes: p.join()

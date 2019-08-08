@@ -286,6 +286,7 @@ class VQ_CVAE(nn.Module):
             nn.ReLU(inplace=True),
             nn.ConvTranspose2d(d, num_channels, kernel_size=4, stride=2, padding=1),
         )
+
         self.d = d
         self.emb = NearestEmbed(k, d)
         self.vq_coef = vq_coef
@@ -304,6 +305,12 @@ class VQ_CVAE(nn.Module):
 
         self.emb.weight.detach().normal_(0, 0.02)
         torch.fmod(self.emb.weight, 0.04)
+
+        # Added for use of multiple cards
+        # self.encoder = nn.DataParallel(self.encoder)
+        # self.decoder = nn.DataParallel(self.decoder)
+        # self.emd = nn.DataParallel(self.emb)
+
 
     def encode(self, x):
         return self.encoder(x)

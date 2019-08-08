@@ -60,18 +60,24 @@ def normalize(batch):
     batch = batch / np.abs(batch).max()
     return batch
 
+def add_noise(img):
+    noise = torch.randn(img.size()) * 0.1
+    noise = noise.cuda()
+    noisy_img = img + noise
+    return noisy_img
+
 def main(args):
     args = {
         "model": "vqvae",
-        "batch_size": 2, # 7 * 9 = 63 (close to desired 64)
+        "batch_size": 1, # 7 * 9 = 63 (close to desired 64)
         "hidden": 128,
-        "k": 512,
+        "k": 512 * 2,
         "lr": 2e-4,
         "vq_coef": 1,  # ?
         "commit_coef": 1,  # ?
         "kl_coef": 1,  # ?
         "dataset": "imagenet",
-        "epochs": 20,
+        "epochs": 25,
         "cuda": torch.cuda.is_available(),
         "seed": 1,
         "gpus": "1",
@@ -191,14 +197,15 @@ def train(epoch, model, train_loader, optimizer, cuda, log_interval, save_path, 
     for batch_idx, (data, _, _) in enumerate(train_loader):
         if data.shape[0] != args["batch_size"] or data.shape[1] != 9:
             continue
-        data = data.view(args["batch_size"] * 9, 3, 224, 224)[:10, :, :, :]
+        data = data.view(args["batch_size"] * 9, 3, 224, 224)[:4, :, :, :]
         data = normalize(data)
         # print("before shape", data.shape)
         data = torch.nn.functional.pad(input=data, pad=(0,0, 16,16, 0,0, 0,0), mode='constant', value=0)
         if cuda:
             data = data.cuda()
+        noisy_data = add_noise(data)
         optimizer.zero_grad()
-        outputs = nn.DataParallel(model)(data)
+        outputs = nn.DataParallel(model)(noisy_data)
         loss = model.loss_function(data, *outputs)
         loss.backward()
         optimizer.step()
@@ -221,7 +228,7 @@ def train(epoch, model, train_loader, optimizer, cuda, log_interval, save_path, 
             for key in latest_losses:
                 losses[key + '_train'] = 0
         if batch_idx == (len(train_loader) - 1):
-            save_reconstructed_images(data, epoch, outputs[0], save_path, 'reconstruction_train')
+            save_reconstructed_images(data, noisy_data, epoch, outputs[0], save_path, 'reconstruction_train')
         if args["dataset"] == 'imagenet' and batch_idx * len(data) > 25000:
             break
 
@@ -249,23 +256,23 @@ def test_net(epoch, model, test_loader, cuda, save_path, args):
             # if data.shape[1] != 9:
               #  print("Data", data.shape)
                #  continue
-            data = data.view(-1, 3, 224, 224)[:10, :, :, :]
+            data = data.view(-1, 3, 224, 224)[:4, :, :, :]
 #            print("DATA BEFORE", data)
             data = normalize(data)
 #            print("AFTER after", data)
             # print("before shape", data.shape)
             data = torch.nn.functional.pad(input=data, pad=(0,0, 16,16, 0,0, 0,0), mode='constant', value=0)
-
             if cuda:
                 data = data.cuda()
-            outputs = nn.DataParallel(model)(data)
+            noisy_data = add_noise(data)
+            outputs = nn.DataParallel(model)(noisy_data)
             # outputs = model(data)
             model.loss_function(data, *outputs)
             latest_losses = model.latest_losses()
             for key in latest_losses:
                 losses[key + '_test'] += float(latest_losses[key])
             if i == 0:
-                save_reconstructed_images(data, epoch, outputs[0], save_path, 'reconstruction_test')
+                save_reconstructed_images(data, noisy_data, epoch, outputs[0], save_path, 'reconstruction_test')
             if args["dataset"] == 'imagenet' and i * len(data) > 1000:
                 break
 
@@ -279,11 +286,12 @@ def test_net(epoch, model, test_loader, cuda, save_path, args):
     return losses
 
 
-def save_reconstructed_images(data, epoch, outputs, save_path, name):
+def save_reconstructed_images(data, noisy, epoch, outputs, save_path, name):
     size = data.size()
     n = min(data.size(0), 8)
     batch_size = data.size(0)
     comparison = torch.cat([data[:n],
+                            noisy[:n],
                             outputs.view(batch_size, size[1], size[2], size[3])[:n]])
     save_image(comparison.cpu(),
                os.path.join(save_path, name + '_' + str(epoch) + '.png'), nrow=n, normalize=True)

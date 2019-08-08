@@ -214,7 +214,9 @@ class SeizureDataset(Dataset):
 
 if __name__ == "__main__":
     seizure_file = TRAIN_SEIZURE_FILE
-    train_dataset = SeizureDataset(seizure_file) #, num_folds=args.num_folds, fold_idx=fold_idx, cross_val=cross_val, split='train')
+    seizure_file = TEST_SEIZURE_FILE
+    seizure_file = DEV_SEIZURE_FILE
+    train_dataset = SeizureDataset(file_dir=seizure_file, split='dev') #, num_folds=args.num_folds, fold_idx=fold_idx, cross_val=cross_val, split='train')
     train_loader = DataLoader(dataset=train_dataset,
                                     shuffle=True,
                                     batch_size=64)
