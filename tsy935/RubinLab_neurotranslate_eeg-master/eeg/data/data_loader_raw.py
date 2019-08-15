@@ -11,6 +11,7 @@ from tqdm import tqdm
 from torch.utils.data import Dataset, DataLoader
 import torch.nn.functional as F
 import math
+from scipy import stats
 # from data.data_utils import *
 from data_utils import *
 
@@ -200,8 +201,9 @@ if __name__ == "__main__":
     print("length of train_loader", len(train_loader))
     print("len of train_loader", len(train_loader))
     for features, y, _, in train_loader:
-        print("feature shape", features.shape)
-        np.save("tesing_raw_dataloader", features)
-        print("y", y.shape)
-        print(y)
+        print(stats.describe(features))
+        # print("feature shape", features.shape)
+        # np.save("tesing_raw_dataloader", features)
+        # print("y", y.shape)
+        # print(y)
 

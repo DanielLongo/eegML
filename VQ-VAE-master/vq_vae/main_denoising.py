@@ -69,7 +69,7 @@ def add_noise(img):
 def main(args):
     args = {
         "model": "vqvae",
-        "batch_size": 1, # 7 * 9 = 63 (close to desired 64)
+        "batch_size": 16, # 7 * 9 = 63 (close to desired 64)
         "hidden": 128,
         "k": 512 * 2,
         "lr": 2e-4,
@@ -227,7 +227,7 @@ def train(epoch, model, train_loader, optimizer, cuda, log_interval, save_path, 
             start_time = time.time()
             for key in latest_losses:
                 losses[key + '_train'] = 0
-        if batch_idx == (len(train_loader) - 1):
+        if batch_idx == (len(train_loader) - 1) or True:
             save_reconstructed_images(data, noisy_data, epoch, outputs[0], save_path, 'reconstruction_train')
         if args["dataset"] == 'imagenet' and batch_idx * len(data) > 25000:
             break

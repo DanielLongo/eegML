@@ -13,7 +13,7 @@ from glob import glob
 from scipy.fftpack import fft, diff
 from scipy.signal import hilbert, convolve2d
 from sklearn.model_selection import StratifiedKFold, train_test_split
-
+from scipy import stats
 # Add parent dir to the sys path
 current_dir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 parent_dir = os.path.dirname(current_dir)
@@ -443,6 +443,7 @@ def computeDivSpec(signals, freq = 12, overlap = 0.25, window = 1):
     """
     
     # S
+    # print("input signal", stats.describe(signals))
     S = computeTimeFreqRep(signals, freq=freq, overlap=overlap, window=window)
     #S = computeFFT(signals)
     
