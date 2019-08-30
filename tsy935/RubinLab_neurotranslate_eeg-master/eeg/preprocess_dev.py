@@ -76,6 +76,7 @@ def main(split):
                 
             # dense features, only for training split
             dense_feats = []
+            print("curr signals", curr_signals)
             for sampling_idx in range(TRAIN_INCREASES):
                 dense_param = DENSE_PARAMS[sampling_idx]
                 dense_feats.append(denseSampling(ordered_channels, curr_signals, dense_param[0], dense_param[1], dense_param[2]))
