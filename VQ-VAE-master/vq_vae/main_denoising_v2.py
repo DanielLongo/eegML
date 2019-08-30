@@ -61,13 +61,18 @@ def normalize(batch):
     batch = batch / np.abs(batch).max()
     return batch
 
+# def add_noise(img):
+
+    # noise = torch.randn(img.size()) * 0.1
+    # noise = noise.cuda()
+    # noisy_img = img + noise
+    # return noisy_img
+
+noise_adder = AddNoiseManual()
 def add_noise(img):
-
-    noise = torch.randn(img.size()) * 0.1
-    noise = noise.cuda()
-    noisy_img = img + noise
-    return noisy_img
-
+    img_noisy = noise_adder(img)
+    return img_noisy
+    
 def main(args):
     args = {
         "model": "vqvae",
