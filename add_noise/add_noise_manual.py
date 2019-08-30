@@ -73,3 +73,5 @@ if __name__ == "__main__":
     noise_adder = AddNoiseManual()
     x_noisy = noise_adder(x)
     print(x_noisy.shape)
+
+

@@ -17,7 +17,7 @@ sys.path.append("../utils/")
 sys.path.append("../../add_noise/")
 from add_noise_manual import AddNoiseManual
 from log import setup_logging_and_results
-# from utils.log import setup_logging_and_results
+#from utils.log import setup_logging_and_results
 sys.path.append("../")
 from vq_vae.auto_encoder import *
 sys.path.append("../../tsy935/RubinLab_neurotranslate_eeg-master/eeg/")
@@ -84,7 +84,7 @@ def main(args):
         "commit_coef": 1,  # ?
         "kl_coef": 1,  # ?
         "dataset": "imagenet",
-        "epochs": 25,
+        "epochs": 250,
         "cuda": torch.cuda.is_available(),
         "seed": 1,
         "gpus": "1",
@@ -201,6 +201,7 @@ def train(epoch, model, train_loader, optimizer, cuda, log_interval, save_path, 
     epoch_losses = {k + '_train': 0 for k, v in loss_dict.items()}
     start_time = time.time()
     batch_idx, data = None, None
+    sigmoid = torch.nn.Sigmoid()
     for batch_idx, (raw, div_spec_clean) in enumerate(train_loader):
         # if div_spec_clean.shape[0] != args["batch_size"] or div_spec_clean.shape[1] != 9:
             # print(div_spec_clean.shape)
@@ -208,15 +209,16 @@ def train(epoch, model, train_loader, optimizer, cuda, log_interval, save_path, 
 
         ### Process Div Spec ###
         div_spec_clean = div_spec_clean.view(args["batch_size"] * 1, 3, 224, 224)[:4, :, :, :]
-        div_spec_clean = normalize(div_spec_clean)
         div_spec_clean = torch.nn.functional.pad(input=div_spec_clean, pad=(0,0, 16,16, 0,0, 0,0), mode='constant', value=0)
-        
+        div_spec_clean = normalize(div_spec_clean) # * 2e2
+#        div_spec_clean = sigmoid(div_spec_clean)
         ### Generate Noisy Data ###
-        raw_noisy = add_noise(raw.cuda()) * 1e-2
-        div_spec_noisy = torch.FloatTensor([EstimatedDataset.compute_div_spec(raw_noisy_sample.cpu()) for raw_noisy_sample in raw_noisy]).cuda()
+       # raw_noisy = add_noise(raw.cuda()) * 1e-2
+        div_spec_noisy = torch.FloatTensor([EstimatedDataset.compute_div_spec(add_noise(raw_noisy_sample)) for raw_noisy_sample in raw.cpu()])
         div_spec_noisy = div_spec_noisy.view(args["batch_size"] * 1, 3, 224, 224)[:4, :, :, :]
         div_spec_noisy = torch.nn.functional.pad(input=div_spec_noisy, pad=(0,0, 16,16, 0,0, 0,0), mode='constant', value=0)
-
+        div_sepc_noisy = normalize(div_spec_noisy)
+ #       div_spec_noisy = sigmoid(div_spec_noisy)
         if cuda:
             div_spec_clean = div_spec_clean.cuda()
             div_spec_noisy = div_spec_noisy.cuda()
@@ -224,6 +226,8 @@ def train(epoch, model, train_loader, optimizer, cuda, log_interval, save_path, 
 
         optimizer.zero_grad()
         outputs = nn.DataParallel(model)(div_spec_noisy)
+#        outputs = sigmoid(outputs)
+        # outputs = [sigmoid(output.long()) for output in outputs]
         loss = model.loss_function(div_spec_clean, *outputs)
         loss.backward()
         optimizer.step()
@@ -246,7 +250,7 @@ def train(epoch, model, train_loader, optimizer, cuda, log_interval, save_path, 
             for key in latest_losses:
                 losses[key + '_train'] = 0
         if batch_idx == (len(train_loader) - 1):
-            save_reconstructed_images(div_spec_clean, div_spec_noisy, epoch, outputs[0], save_path, 'reconstruction_train')
+            save_reconstructed_images(div_spec_clean * 2e2, div_spec_noisy * 2e2, epoch, outputs[0] * 2e2, save_path, 'reconstruction_train')
         if args["dataset"] == 'imagenet' and batch_idx * len(div_spec_clean) > 25000:
             break
 
@@ -312,7 +316,7 @@ def save_reconstructed_images(data, noisy, epoch, outputs, save_path, name):
                             noisy[:n],
                             outputs.view(batch_size, size[1], size[2], size[3])[:n]])
     save_image(comparison.cpu(),
-               os.path.join(save_path, name + '_' + str(epoch) + '.png'), nrow=n, normalize=True)
+               os.path.join(save_path, name + '_' + str(epoch) + '.png'), nrow=n, normalize=False)
 
 
 if __name__ == "__main__":
