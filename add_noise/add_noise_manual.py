@@ -57,14 +57,19 @@ class AddNoiseManual(object):
         return x
 
     def __call__(self, x):
+        """
+        x array (n channels, n samples)
+        """
         if type(x) != np.ndarray: 
             x = x.numpy()
         if self.use_signal_square:
             noise = self.get_signal_square(x, b=self.b)
-            x = self.apply_at_random_loc(x, noise, 400)
+            # x = self.apply_at_random_loc(x, noise, 400)
+            x += noise
         if self.use_sin_wave:
             noise = self.get_sine_wave(x, freq_coef=9000, b=self.b)
-            x = self.apply_at_random_loc(x, noise, 400)
+            # x = self.apply_at_random_loc(x, noise, 400)
+            x += noise
         return x
 
 if __name__ == "__main__":

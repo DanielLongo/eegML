@@ -61,14 +61,15 @@ def normalize(batch):
     batch = batch / np.abs(batch).max()
     return batch
 
-# def add_noise(img):
+def compute_div_spec(raw_noisy, transpose=True):
+    # tranpose switches channels from last to first
+    div_spec_noisy = torch.FloatTensor([EstimatedDataset.compute_div_spec(raw_noisy_sample) for raw_noisy_sample in raw_noisy])
+    if transpose:
+        div_spec_noisy = div_spec_noisy.transpose(1, 3) #[:4, :, :, :]
+    div_spec_noisy = torch.nn.functional.pad(input=div_spec_noisy, pad=(0,0, 16,16, 0,0, 0,0), mode='constant', value=0)
+    return div_spec_noisy
 
-    # noise = torch.randn(img.size()) * 0.1
-    # noise = noise.cuda()
-    # noisy_img = img + noise
-    # return noisy_img
-
-noise_adder = AddNoiseManual()
+noise_adder = AddNoiseManual(b=1e3)
 def add_noise(img):
     img_noisy = noise_adder(img)
     return img_noisy
@@ -84,7 +85,7 @@ def main(args):
         "commit_coef": 1,  # ?
         "kl_coef": 1,  # ?
         "dataset": "imagenet",
-        "epochs": 250,
+        "epochs": 250 * 2,
         "cuda": torch.cuda.is_available(),
         "seed": 1,
         "gpus": "1",
@@ -208,17 +209,27 @@ def train(epoch, model, train_loader, optimizer, cuda, log_interval, save_path, 
             # continue
 
         ### Process Div Spec ###
-        div_spec_clean = div_spec_clean.view(args["batch_size"] * 1, 3, 224, 224)[:4, :, :, :]
-        div_spec_clean = torch.nn.functional.pad(input=div_spec_clean, pad=(0,0, 16,16, 0,0, 0,0), mode='constant', value=0)
-        div_spec_clean = normalize(div_spec_clean) # * 2e2
-#        div_spec_clean = sigmoid(div_spec_clean)
+        # div_spec_clean = div_spec_clean.view(args["batch_size"] * 1, 3, 224, 224)[:4, :, :, :]
+        # div_spec_clean = torch.nn.functional.pad(input=div_spec_clean, pad=(0,0, 16,16, 0,0, 0,0), mode='constant', value=0)
+        # div_spec_clean = normalize(div_spec_clean) # * 2e2
+        source = raw.cpu().clone()
+        div_spec_clean = compute_div_spec(source)
+        div_spec_clean = normalize(div_spec_clean)
+
+        # div_spec_clean = sigmoid(div_spec_clean)
         ### Generate Noisy Data ###
        # raw_noisy = add_noise(raw.cuda()) * 1e-2
-        div_spec_noisy = torch.FloatTensor([EstimatedDataset.compute_div_spec(add_noise(raw_noisy_sample)) for raw_noisy_sample in raw.cpu()])
-        div_spec_noisy = div_spec_noisy.view(args["batch_size"] * 1, 3, 224, 224)[:4, :, :, :]
-        div_spec_noisy = torch.nn.functional.pad(input=div_spec_noisy, pad=(0,0, 16,16, 0,0, 0,0), mode='constant', value=0)
-        div_sepc_noisy = normalize(div_spec_noisy)
- #       div_spec_noisy = sigmoid(div_spec_noisy)
+        source = raw.cpu().clone()
+        noisy_raw = torch.FloatTensor([add_noise(raw_sample) for raw_sample in source])
+        # print("noisy_raw", noisy_raw.shape, np.sum(np.abs(noisy_raw.numpy())))
+        div_spec_noisy = compute_div_spec(noisy_raw)
+        # print("converted noisy raw", div_spec_noisy.shape)
+        div_spec_noisy = normalize(div_spec_noisy)
+        # div_spec_noisy = torch.FloatTensor([EstimatedDataset.compute_div_spec(add_noise(raw_noisy_sample)) for raw_noisy_sample in raw.cpu()])
+        # div_spec_noisy = div_spec_noisy.view(args["batch_size"] * 1, 3, 224, 224)[:4, :, :, :]
+        # div_spec_noisy = torch.nn.functional.pad(input=div_spec_noisy, pad=(0,0, 16,16, 0,0, 0,0), mode='constant', value=0)
+        # div_sepc_noisy = normalize(div_spec_noisy)
+        # div_spec_noisy = sigmoid(div_spec_noisy)
         if cuda:
             div_spec_clean = div_spec_clean.cuda()
             div_spec_noisy = div_spec_noisy.cuda()
