@@ -69,10 +69,11 @@ def compute_div_spec(raw_noisy, transpose=True):
     div_spec_noisy = torch.nn.functional.pad(input=div_spec_noisy, pad=(0,0, 16,16, 0,0, 0,0), mode='constant', value=0)
     return div_spec_noisy
 
-noise_adder = AddNoiseManual(b=1e3)
-def add_noise(img):
-    img_noisy = noise_adder(img)
-    return img_noisy
+# def add_noise(img):
+#     img_noisy = noise_adder(img)
+#     return img_noisy
+
+noise_adder = AddNoiseManual(b=1e4)
     
 def main(args):
     args = {
@@ -84,6 +85,7 @@ def main(args):
         "vq_coef": 1,  # ?
         "commit_coef": 1,  # ?
         "kl_coef": 1,  # ?
+        # "noise_coef" : 1e3,
         "dataset": "imagenet",
         "epochs": 250 * 2,
         "cuda": torch.cuda.is_available(),
@@ -163,7 +165,7 @@ def main(args):
     if args["cuda"]:
         model.cuda()
 
-    noise_adder = AddNoiseManual(b=.5)
+    # noise_adder = AddNoiseManual(b=.5)
 
     optimizer = optim.Adam(model.parameters(), lr=lr)
     scheduler = optim.lr_scheduler.StepLR(optimizer, 10 if args["dataset"] == 'imagenet' else 30, 0.5, )
@@ -220,7 +222,7 @@ def train(epoch, model, train_loader, optimizer, cuda, log_interval, save_path, 
         ### Generate Noisy Data ###
        # raw_noisy = add_noise(raw.cuda()) * 1e-2
         source = raw.cpu().clone()
-        noisy_raw = torch.FloatTensor([add_noise(raw_sample) for raw_sample in source])
+        noisy_raw = torch.FloatTensor([noise_adder(raw_sample) for raw_sample in source])
         # print("noisy_raw", noisy_raw.shape, np.sum(np.abs(noisy_raw.numpy())))
         div_spec_noisy = compute_div_spec(noisy_raw)
         # print("converted noisy raw", div_spec_noisy.shape)
@@ -297,7 +299,7 @@ def test_net(epoch, model, test_loader, cuda, save_path, args):
             data = torch.nn.functional.pad(input=data, pad=(0,0, 16,16, 0,0, 0,0), mode='constant', value=0)
             if cuda:
                 data = data.cuda()
-            noisy_data = add_noise(data)
+            noisy_data = noise_adder(data)
             outputs = nn.DataParallel(model)(noisy_data)
             # outputs = model(data)
             model.loss_function(data, *outputs)
