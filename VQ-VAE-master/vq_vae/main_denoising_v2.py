@@ -16,6 +16,7 @@ from torchvision.utils import save_image
 sys.path.append("../utils/")
 sys.path.append("../../add_noise/")
 from add_noise_manual import AddNoiseManual
+from add_noise_recordings import AddNoiseRecordings
 from log import setup_logging_and_results
 #from utils.log import setup_logging_and_results
 sys.path.append("../")
@@ -73,7 +74,9 @@ def compute_div_spec(raw_noisy, transpose=True):
 #     img_noisy = noise_adder(img)
 #     return img_noisy
 
-noise_adder = AddNoiseManual(b=1e4)
+# noise_adder = AddNoiseManual(b=1e4)
+n_recordings=5000 #*4
+noise_adder = AddNoiseRecordings(n_recordings=n_recordings)
     
 def main(args):
     args = {
@@ -82,12 +85,13 @@ def main(args):
         "hidden": 128,
         "k": 512 * 1,
         "lr": 2e-4,
+        "n_recordings" : n_recordings,
         "vq_coef": 1,  # ?
         "commit_coef": 1,  # ?
         "kl_coef": 1,  # ?
         # "noise_coef" : 1e3,
         "dataset": "imagenet",
-        "epochs": 250 * 2,
+        "epochs": 250 * 4,
         "cuda": torch.cuda.is_available(),
         "seed": 1,
         "gpus": "1",
@@ -171,7 +175,7 @@ def main(args):
     scheduler = optim.lr_scheduler.StepLR(optimizer, 10 if args["dataset"] == 'imagenet' else 30, 0.5, )
 
     kwargs = {'num_workers': 1, 'pin_memory': True} if args["cuda"] else {}
-    train_dataset = EstimatedDataset(8, transform=dataset_transforms[args["dataset"]])
+    train_dataset = EstimatedDataset(8 * 20, transform=dataset_transforms[args["dataset"]])
     train_loader = torch.utils.data.DataLoader(
         dataset=train_dataset,
         shuffle=True,
@@ -187,6 +191,7 @@ def main(args):
     print("Save path", save_path)
     for epoch in range(1, args["epochs"] + 1):
         train_losses = train(epoch, model, train_loader, optimizer, args["cuda"], args["log_interval"], save_path, args)
+        torch.save(model.state_dict(), "saved_models/train.pt")
     #     test_losses = test_net(epoch, model, test_loader, args["cuda"], save_path, args)
     #     results.add(epoch=epoch, **train_losses, **test_losses)
     #     for k in train_losses:
@@ -222,7 +227,9 @@ def train(epoch, model, train_loader, optimizer, cuda, log_interval, save_path, 
         ### Generate Noisy Data ###
        # raw_noisy = add_noise(raw.cuda()) * 1e-2
         source = raw.cpu().clone()
-        noisy_raw = torch.FloatTensor([noise_adder(raw_sample) for raw_sample in source])
+
+#        noisy_raw = torch.FloatTensor([noise_adder(raw_sample) for raw_sample in source])
+        noisy_raw = source # test without noise
         # print("noisy_raw", noisy_raw.shape, np.sum(np.abs(noisy_raw.numpy())))
         div_spec_noisy = compute_div_spec(noisy_raw)
         # print("converted noisy raw", div_spec_noisy.shape)
@@ -275,6 +282,7 @@ def train(epoch, model, train_loader, optimizer, cuda, log_interval, save_path, 
     loss_string = '\t'.join(['{}: {:.6f}'.format(k, v) for k, v in epoch_losses.items()])
     logging.info('====> Epoch: {} {}'.format(epoch, loss_string))
     # model.print_atom_hist(outputs[3])
+    
     return epoch_losses
 
 
