@@ -58,7 +58,7 @@ def get_args():
                         help='Maximum number of checkpoints to keep on disk.')
     parser.add_argument('--eval_steps',
                         type=int,
-                        default=5000,
+                        default=5000 * .05,
                         help='Number of steps between successive evaluations.')
     parser.add_argument('--metric_name',
                         type=str,

@@ -143,7 +143,7 @@ def train_fold(args, device, save_dir, log, tbx, cross_val = False, fold_idx = N
    
     # Get Denoiser
     denoiser = VQ_CVAE(128, k=512, num_channels=3)
-    denoiser.load_state_dict(torch.load("/mnt/home2/dlongo/eegML/VQ-VAE-master/vq_vae/saved_models/train.pt"))
+    denoiser.load_state_dict(torch.load("/mnt/home2/dlongo/eegML/VQ-VAE-master/vq_vae/saved_models/train-ll.pt"))
     denoiser.eval()
     for param in denoiser.parameters():
         param.requires_grad = False
@@ -195,6 +195,7 @@ def train_fold(args, device, save_dir, log, tbx, cross_val = False, fold_idx = N
                 features = features.view(-1, 3, 224, 224) # merge number of dense samples with batch size
                 for i in range(0, features.shape[0], 16):
                     features[i:i+16] = denoiser(features[i:i+16])[0]
+                  #  features[i:i+16] = features[i:i+16] #denoiser(features[i:i+16])[0]
                 features = features.to(device)
                 y = y.view(-1) # merge number of dense samples with batch size
                 y = y.to(device)
@@ -293,15 +294,26 @@ def evaluate_fold(model, args, save_dir, device, cross_val=False, fold_idx=None,
     # change to evaluate mode
     model.eval()
     
-    y_pred_all = []
+    denoiser = VQ_CVAE(128, k=512, num_channels=3)
+    denoiser.load_state_dict(torch.load("/mnt/home2/dlongo/eegML/VQ-VAE-master/vq_vae/saved_models/train-ll.pt"))
+    denoiser.eval()
+    for param in denoiser.parameters():
+        param.requires_grad = False
+    denoiser.cuda()
+#    denoiser.to(device)
+    denoiser = nn.DataParallel(denoiser, args.gpu_ids)
     y_true_all = []
     file_name_all = []
+    y_pred_all = []
     with torch.no_grad(), tqdm(total=len(data_loader.dataset)) as progress_bar:
         for features, y, file_name in data_loader:  
             batch_size = features.shape[0]
                         
             # Setup for forward
             features = features.to(device)
+            for i in range(0, features.shape[0], 4):
+                # features[i:i+4] = features[i:i+4]
+                features[i:i+4] = denoiser(features[i:i+4])[0]
             y = y.view(-1)
             y = y.to(device)
             #print('y shape:{}'.format(y.size()))

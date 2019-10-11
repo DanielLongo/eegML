@@ -55,6 +55,7 @@ dataset_transforms = {'imagenet': transforms.Compose([#transforms.Resize(128), t
 default_hyperparams = {'imagenet': {'lr': 2e-4, 'k': 512, 'hidden': 128},
                        'cifar10': {'lr': 2e-4, 'k': 10, 'hidden': 256},
                        'mnist': {'lr': 1e-4, 'k': 10, 'hidden': 64}}
+save_filename = "train-ll"
 
 def normalize(batch):
     batch = batch - batch.mean()
@@ -75,7 +76,7 @@ def compute_div_spec(raw_noisy, transpose=True):
 #     return img_noisy
 
 # noise_adder = AddNoiseManual(b=1e4)
-n_recordings=5000 #*4
+n_recordings=5000 * 2#*4
 noise_adder = AddNoiseRecordings(n_recordings=n_recordings)
     
 def main(args):
@@ -175,7 +176,7 @@ def main(args):
     scheduler = optim.lr_scheduler.StepLR(optimizer, 10 if args["dataset"] == 'imagenet' else 30, 0.5, )
 
     kwargs = {'num_workers': 1, 'pin_memory': True} if args["cuda"] else {}
-    train_dataset = EstimatedDataset(8 * 20, transform=dataset_transforms[args["dataset"]])
+    train_dataset = EstimatedDataset(8 * 20 * 5, transform=dataset_transforms[args["dataset"]])
     train_loader = torch.utils.data.DataLoader(
         dataset=train_dataset,
         shuffle=True,
@@ -191,7 +192,7 @@ def main(args):
     print("Save path", save_path)
     for epoch in range(1, args["epochs"] + 1):
         train_losses = train(epoch, model, train_loader, optimizer, args["cuda"], args["log_interval"], save_path, args)
-        torch.save(model.state_dict(), "saved_models/train.pt")
+        torch.save(model.state_dict(), "saved_models/" + save_filename + ".pt")
     #     test_losses = test_net(epoch, model, test_loader, args["cuda"], save_path, args)
     #     results.add(epoch=epoch, **train_losses, **test_losses)
     #     for k in train_losses:
