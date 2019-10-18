@@ -10,6 +10,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from torchvision.utils import save_image
 import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
@@ -37,7 +38,21 @@ def seed_torch(seed=123):
     torch.manual_seed(seed)
     torch.cuda.manual_seed_all(seed)
     torch.backends.cudnn.deterministic = True
-      
+
+# mine
+def save_constructions(original, denoised, file):
+    assert(original.size() == denoised.size())
+    original = original.cpu()
+    denoised = denoised.cpu()
+    size = original.size()
+    n = min(original.size(0), 8)
+    batch_size = original.size(0)
+    comparison = torch.cat([original[:n],
+                            denoised[:n]
+    ])
+    save_image(comparison,
+               os.path.join(file + '.png'), nrow=n, normalize=True)
+
 
 def get_logger(log_dir, name):
     """Get a `logging.Logger` instance that prints to the console
@@ -91,7 +106,7 @@ def get_logger(log_dir, name):
     return logger
 
 
-def get_save_dir(base_dir, training, id_max=50):
+def get_save_dir(base_dir, training, id_max=100):
     """Get a unique save directory by appending the smallest positive integer
     `id < id_max` that is not already taken (i.e., no dir exists with that id).
     Args:

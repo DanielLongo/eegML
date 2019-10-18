@@ -24,7 +24,7 @@ from torch.optim.lr_scheduler import CosineAnnealingLR
 import sys
 sys.path.append("/mnt/home2/dlongo/eegML/VQ-VAE-master/")
 from vq_vae.auto_encoder import *
-
+from utils import save_constructions
 # make deterministic
 torch.manual_seed(0)
 torch.backends.cudnn.deterministic = True
@@ -144,9 +144,7 @@ def train_fold(args, device, save_dir, log, tbx, cross_val = False, fold_idx = N
     # Get Denoiser
     denoiser = VQ_CVAE(128, k=512, num_channels=3)
     denoiser.load_state_dict(torch.load("/mnt/home2/dlongo/eegML/VQ-VAE-master/vq_vae/saved_models/train-ll.pt"))
-    denoiser.eval()
-    for param in denoiser.parameters():
-        param.requires_grad = False
+    # denoiser.eval()
     denoiser.cuda()
 #    denoiser.to(device)
     denoiser = nn.DataParallel(denoiser, args.gpu_ids)
@@ -183,21 +181,36 @@ def train_fold(args, device, save_dir, log, tbx, cross_val = False, fold_idx = N
     log.info('Training...')
     steps_till_eval = args.eval_steps
     epoch = step // len(train_dataset)
+    train_denoiser = False
     while epoch != args.num_epochs:
         epoch += 1
         log.info('Starting epoch {}...'.format(epoch))
         with torch.enable_grad(), \
             tqdm(total=len(train_loader.dataset)) as progress_bar:
-            for features, y, _, in train_loader: 
-                batch_size = features.shape[0]     
+            for features_noisy, y, _, in train_loader: 
+                if train_denoiser:
+                    for param in denoiser.parameters():
+                        param.requires_grad = True
+                    for param in model.parameters():
+                        param.requires_grad = False
+                    train_denoiser = False
+                else:
+                    for param in model.parameters():
+                        param.requires_grad = True
+                    for param in denoiser.parameters():
+                        param.requires_grad = False
+                    train_denoiser = True
+                batch_size = features_noisy.shape[0]     
                 
                 # Setup for forward
-                features = features.view(-1, 3, 224, 224) # merge number of dense samples with batch size
+                features = features_noisy.clone().view(-1, 3, 224, 224)[:8] 
+                # print("feautes shape", features.shape)
+                # features = features_noisy.view(-1, 3, 224, 224) # merge number of dense samples with batch size
                 for i in range(0, features.shape[0], 16):
                     features[i:i+16] = denoiser(features[i:i+16])[0]
                   #  features[i:i+16] = features[i:i+16] #denoiser(features[i:i+16])[0]
                 features = features.to(device)
-                y = y.view(-1) # merge number of dense samples with batch size
+                y = y.view(-1)[:8] # merge number of dense samples with batch size
                 y = y.to(device)
                 
                 # Zero out optimizer first
@@ -264,7 +277,7 @@ def train_fold(args, device, save_dir, log, tbx, cross_val = False, fold_idx = N
         
         # step lr scheduler
         scheduler.step()
-        
+        save_constructions(features_noisy.view(-1, 3, 224, 224)[:8], features, "saved_constructions/testing" + str(epoch))
     return best_path
 
 
@@ -310,12 +323,12 @@ def evaluate_fold(model, args, save_dir, device, cross_val=False, fold_idx=None,
             batch_size = features.shape[0]
                         
             # Setup for forward
-            features = features.to(device)
+            features = features.to(device)#[:4]
             for i in range(0, features.shape[0], 4):
                 # features[i:i+4] = features[i:i+4]
                 features[i:i+4] = denoiser(features[i:i+4])[0]
             y = y.view(-1)
-            y = y.to(device)
+            y = y.to(device)#[:4]
             #print('y shape:{}'.format(y.size()))
             #print('features shape: {}'.format(features.size()))
 
