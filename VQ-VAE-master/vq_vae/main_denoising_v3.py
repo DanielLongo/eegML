@@ -25,7 +25,8 @@ sys.path.append("../../tsy935/RubinLab_neurotranslate_eeg-master/eeg/data/")
 from data_loader_estimated import EstimatedDataset
 from constants import *
 from data.data_utils import *
-from data.data_loader import SeizureDataset
+# from data.data_loader import SeizureDataset
+from data.data_loader_v2 import SeizureDataset
 from constants import *
 import datetime
 
@@ -90,11 +91,10 @@ def normalize(batch):
 def main(args):
     args = {
         "model": "vqvae",
-        "batch_size": 1, # anything larger and runs out of vRAM
+        "batch_size": 16, # anything too large and runs out of vRAM
         "hidden": 128, # 128,
         "k": 256, #  512,
         "lr": 5e-7, #5e-6,#2e-4,
-        "n_recordings" : n_recordings,
         "vq_coef": 2,
         "commit_coef": 2,
         "kl_coef": 1, 
@@ -185,13 +185,15 @@ def train(epoch, model, train_loader, optimizer, cuda, log_interval, save_path, 
         noise = noise.cuda()
     # noise = torch.eye(224, 224)
     
-    for batch_idx, (div_spec, _, _) in enumerate(train_loader):
-        # if div_spec_clean.shape[0] != args["batch_size"] or div_spec_clean.shape[1] != 9:
-            # print(div_spec_clean.shape)
-            # continue
-            
+    # for data_loader.py
+    # for batch_idx, (div_spec, _, _) in enumerate(train_loader):
+
+    # for data_loader_v2.py 
+    for batch_idx, (div_spec) in enumerate(train_loader):
+
         # add [:6] because model too big for more than 6 examples per batch
-        div_spec = div_spec.view(-1, 3, 224, 224)[:6]
+        # div_spec = div_spec.view(-1, 3, 224, 224)[:6]
+
         if cuda:
             div_spec = div_spec.cuda()
 
@@ -202,9 +204,12 @@ def train(epoch, model, train_loader, optimizer, cuda, log_interval, save_path, 
         div_spec_clean = div_spec
         div_spec_noisy = noise + div_spec
 
+        # print("shape train", div_spec_clean.shape)
+
 
         optimizer.zero_grad()
         outputs = nn.DataParallel(model)(div_spec_noisy)
+        # print("shape outputs", outputs[0].shape)
         loss = model.loss_function(div_spec_clean, *outputs)
         loss.backward()
         optimizer.step()
@@ -233,6 +238,7 @@ def train(epoch, model, train_loader, optimizer, cuda, log_interval, save_path, 
             for key in latest_losses:
                 losses[key + '_train'] = 0
         if batch_idx == (len(train_loader) - 1):
+            # print("shape outputs", outputs[0].shape)
             save_reconstructed_images(div_spec_clean, div_spec_noisy, epoch, outputs[0], save_path, 'reconstruction_train', cur_iteration=cur_iteration)
 
         if args["dataset"] == 'imagenet' and batch_idx * len(div_spec) > 25000:
@@ -262,16 +268,21 @@ def test_net(epoch, model, test_loader, cuda, save_path, args):
         noise = noise.cuda()
     
     with torch.no_grad():
-         for batch_idx, (div_spec, _, _) in enumerate(test_loader):
-            # if data.shape[0] != args["batch_size"] or data.shape[1] != 9:
-               #  continue
 
-            div_spec = div_spec.view(-1, 3, 224, 224)[:6]
+        # for data_loader.py
+        # for batch_idx, (div_spec, _, _) in enumerate(test_loader):
+
+        # for data_loader_v2.py
+        for batch_idx, (div_spec) in enumerate(test_loader):
+
+            # div_spec = div_spec.view(-1, 3, 224, 224)[:6]
+
             if cuda:
                 div_spec = div_spec.cuda()
 
             div_spec_clean = div_spec
             div_spec_noisy = noise + div_spec
+
 
             outputs = nn.DataParallel(model)(div_spec_noisy)
             latest_losses = model.latest_losses()
@@ -303,6 +314,7 @@ def test_net(epoch, model, test_loader, cuda, save_path, args):
 
 
 def save_reconstructed_images(data, noisy, epoch, outputs, save_path, name, cur_iteration=None):
+    # print("save reconstrected", save_path, outputs.shape)
     size = data.size()
     n = min(data.size(0), 8)
     batch_size = data.size(0)
