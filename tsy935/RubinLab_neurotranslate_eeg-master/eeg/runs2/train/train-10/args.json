@@ -1,0 +1,30 @@
+{
+    "compression": 0.5,
+    "cross_val": false,
+    "drop_rate": 0.0,
+    "eval_steps": 250.0,
+    "gpu_ids": [
+        0,
+        1
+    ],
+    "growth_rate": 32,
+    "l2_wd": 0.0005,
+    "lr_init": 5e-06,
+    "max_checkpoints": 3,
+    "max_grad_norm": 5.0,
+    "maximize_metric": true,
+    "metric_avg": "weighted",
+    "metric_name": "F1",
+    "model_name": "SeizureNet",
+    "num_epochs": 200,
+    "num_folds": 5,
+    "num_workers": 4,
+    "overlap": 0.25,
+    "sample_freq": 96,
+    "save_dir": "runs2",
+    "t_window": 1,
+    "test_batch_size": 256,
+    "train_batch_size": 16,
+    "train_save_dir": "runs2/train/train-10",
+    "write_outputs": false
+}
